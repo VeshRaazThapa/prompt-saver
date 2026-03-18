@@ -2,15 +2,11 @@ import { IndexedDBUserRepository } from './indexeddb-user';
 import { IndexedDBWorkspaceRepository } from './indexeddb-workspace';
 import { IndexedDBPromptRepository } from './indexeddb-prompt';
 import { IndexedDBPromptVersionRepository } from './indexeddb-prompt-version';
-import { IndexedDBTestRunRepository } from './indexeddb-test-run';
-import { IndexedDBLLMProviderRepository } from './indexeddb-llm-provider';
 import type {
   IUserRepository,
   IWorkspaceRepository,
   IPromptRepository,
   IPromptVersionRepository,
-  ITestRunRepository,
-  ILLMProviderRepository,
 } from './types';
 
 /**
@@ -22,8 +18,6 @@ class RepositoryFactory {
   private workspaceRepo: IWorkspaceRepository | null = null;
   private promptRepo: IPromptRepository | null = null;
   private promptVersionRepo: IPromptVersionRepository | null = null;
-  private testRunRepo: ITestRunRepository | null = null;
-  private llmProviderRepo: ILLMProviderRepository | null = null;
 
   getUserRepository(): IUserRepository {
     if (this.userRepo === null) {
@@ -52,20 +46,6 @@ class RepositoryFactory {
     }
     return this.promptVersionRepo;
   }
-
-  getTestRunRepository(): ITestRunRepository {
-    if (this.testRunRepo === null) {
-      this.testRunRepo = new IndexedDBTestRunRepository();
-    }
-    return this.testRunRepo;
-  }
-
-  getLLMProviderRepository(): ILLMProviderRepository {
-    if (this.llmProviderRepo === null) {
-      this.llmProviderRepo = new IndexedDBLLMProviderRepository();
-    }
-    return this.llmProviderRepo;
-  }
 }
 
 // Singleton instance
@@ -93,12 +73,4 @@ export function getPromptRepository(): IPromptRepository {
 
 export function getPromptVersionRepository(): IPromptVersionRepository {
   return repositoryFactory.getPromptVersionRepository();
-}
-
-export function getTestRunRepository(): ITestRunRepository {
-  return repositoryFactory.getTestRunRepository();
-}
-
-export function getLLMProviderRepository(): ILLMProviderRepository {
-  return repositoryFactory.getLLMProviderRepository();
 }

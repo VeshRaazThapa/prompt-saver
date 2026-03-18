@@ -1,4 +1,4 @@
-import type { Prompt, PromptVersion, TestRun, LLMProvider, User, Workspace } from '@/types';
+import type { Prompt, PromptVersion, User, Workspace } from '@/types';
 
 /**
  * Base repository interface
@@ -81,7 +81,7 @@ export interface IPromptRepository extends IRepository<Prompt> {
   ): Promise<Prompt[]>;
 
   /**
-   * Searches prompts by title or tags
+   * Searches prompts by title, description, content, and tags
    * @param workspaceId The workspace ID
    * @param query Search query
    * @param options Query options
@@ -144,81 +144,4 @@ export interface IPromptVersionRepository extends IRepository<PromptVersion> {
    * @returns The created version
    */
   createVersionAtomic(version: PromptVersion, promptId: string): Promise<PromptVersion>;
-}
-
-/**
- * Test run repository interface
- */
-export interface ITestRunRepository extends IRepository<TestRun> {
-  /**
-   * Finds all test runs for a prompt
-   * @param promptId The prompt ID
-   * @param options Query options
-   * @returns Array of test runs
-   */
-  findByPromptId(
-    promptId: string,
-    options?: {
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<TestRun[]>;
-
-  /**
-   * Finds all test runs for a specific prompt version
-   * @param promptVersionId The prompt version ID
-   * @param options Query options
-   * @returns Array of test runs
-   */
-  findByPromptVersionId(
-    promptVersionId: string,
-    options?: {
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<TestRun[]>;
-
-  /**
-   * Finds all test runs in a workspace
-   * @param workspaceId The workspace ID
-   * @param options Query options
-   * @returns Array of test runs
-   */
-  findByWorkspaceId(
-    workspaceId: string,
-    options?: {
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<TestRun[]>;
-}
-
-/**
- * LLM provider repository interface
- */
-export interface ILLMProviderRepository extends IRepository<LLMProvider> {
-  /**
-   * Finds all providers in a workspace
-   * @param workspaceId The workspace ID
-   * @returns Array of providers
-   */
-  findByWorkspaceId(workspaceId: string): Promise<LLMProvider[]>;
-
-  /**
-   * Finds a provider by workspace and provider name
-   * @param workspaceId The workspace ID
-   * @param providerName The provider name
-   * @returns The provider or null if not found
-   */
-  findByName(
-    workspaceId: string,
-    providerName: LLMProvider['provider_name']
-  ): Promise<LLMProvider | null>;
-
-  /**
-   * Finds all active providers in a workspace
-   * @param workspaceId The workspace ID
-   * @returns Array of active providers
-   */
-  findActiveProviders(workspaceId: string): Promise<LLMProvider[]>;
 }
