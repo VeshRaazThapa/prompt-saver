@@ -1,11 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, getProviders } from 'next-auth/react';
 import { SearchBar } from './SearchBar';
 
 export function Navigation() {
   const { data: session } = useSession();
+  const [hasProviders, setHasProviders] = useState(false);
+
+  useEffect(() => {
+    getProviders().then((p) => {
+      setHasProviders(p !== null && Object.keys(p).length > 0);
+    });
+  }, []);
 
   return (
     <nav className="border-b border-gray-200 bg-white">
@@ -47,14 +55,14 @@ export function Navigation() {
                   Sign Out
                 </button>
               </div>
-            ) : (
+            ) : hasProviders ? (
               <Link
                 href="/auth/signin"
                 className="text-sm font-medium text-gray-700 hover:text-gray-900"
               >
                 Sign In
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
