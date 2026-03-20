@@ -10,13 +10,20 @@ import type { User, Workspace } from '@/types';
  * NextAuth configuration
  * Handles Google OAuth authentication and user session management
  */
-export const authOptions: NextAuthOptions = {
-  providers: [
+const providers = [];
+
+// Only register Google OAuth when credentials are provided
+if (process.env['GOOGLE_CLIENT_ID'] && process.env['GOOGLE_CLIENT_SECRET']) {
+  providers.push(
     GoogleProvider({
-      clientId: process.env['GOOGLE_CLIENT_ID'] ?? '',
-      clientSecret: process.env['GOOGLE_CLIENT_SECRET'] ?? '',
-    }),
-  ],
+      clientId: process.env['GOOGLE_CLIENT_ID'],
+      clientSecret: process.env['GOOGLE_CLIENT_SECRET'],
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  providers,
 
   callbacks: {
     /**
