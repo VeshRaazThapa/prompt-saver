@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession, signOut, getProviders } from 'next-auth/react';
 import { SearchBar } from './SearchBar';
 
 export function Navigation() {
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const isLibraryPage = pathname === '/';
   const [hasProviders, setHasProviders] = useState(false);
 
   useEffect(() => {
@@ -16,22 +19,19 @@ export function Navigation() {
   }, []);
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b border-stone-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-4">
-          {/* Logo */}
-          <Link href="/" className="shrink-0 text-lg font-bold text-gray-900">
+          <Link href="/" className="shrink-0 font-display text-xl text-stone-900">
             Prompt Saver
           </Link>
 
-          {/* Search */}
-          <SearchBar className="hidden sm:block sm:max-w-md sm:flex-1" />
+          {!isLibraryPage && <SearchBar className="hidden sm:block sm:max-w-md sm:flex-1" />}
 
-          {/* Actions */}
           <div className="flex items-center gap-3">
             <Link
               href="/prompts/new"
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-md bg-primary px-3 min-h-[44px] inline-flex items-center text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               + New Prompt
             </Link>
@@ -45,12 +45,12 @@ export function Navigation() {
                     className="h-7 w-7 rounded-full"
                   />
                 )}
-                <span className="hidden text-sm text-gray-700 sm:inline">
+                <span className="hidden text-sm text-stone-600 sm:inline">
                   {session.user.name}
                 </span>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="min-h-[44px] px-2 text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700"
                 >
                   Sign Out
                 </button>
@@ -58,7 +58,7 @@ export function Navigation() {
             ) : hasProviders ? (
               <Link
                 href="/auth/signin"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                className="min-h-[44px] inline-flex items-center px-2 text-sm font-medium text-stone-600 transition-colors duration-150 hover:text-stone-900"
               >
                 Sign In
               </Link>

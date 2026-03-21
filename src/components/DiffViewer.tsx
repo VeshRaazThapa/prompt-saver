@@ -13,31 +13,31 @@ export function DiffViewer({ oldText, newText, oldLabel, newLabel }: DiffViewerP
   const lines = computeDiff(oldText, newText);
 
   if (oldText === newText) {
-    return <p className="py-4 text-center text-sm text-gray-500">No differences</p>;
+    return <p className="py-4 text-center text-sm text-stone-500">No differences</p>;
   }
 
   return (
-    <div className="overflow-auto rounded border border-gray-200">
+    <div className="overflow-auto rounded-lg border border-stone-200">
       {(oldLabel || newLabel) && (
-        <div className="flex border-b border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-500">
+        <div className="flex border-b border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-500">
           {oldLabel && <span className="text-red-600">{oldLabel}</span>}
           {oldLabel && newLabel && <span className="mx-2">&rarr;</span>}
-          {newLabel && <span className="text-green-600">{newLabel}</span>}
+          {newLabel && <span className="text-emerald-600">{newLabel}</span>}
         </div>
       )}
-      <pre className="text-sm">
+      <pre className="font-mono text-sm">
         {lines.map((line, i) => (
           <div
             key={i}
             className={`px-3 py-0.5 ${
               line.type === 'added'
-                ? 'bg-green-50 text-green-800'
+                ? 'bg-emerald-50 text-emerald-800'
                 : line.type === 'removed'
                   ? 'bg-red-50 text-red-800'
-                  : 'text-gray-700'
+                  : 'text-stone-700'
             }`}
           >
-            <span className="mr-2 inline-block w-4 select-none text-gray-400">
+            <span className="mr-2 inline-block w-4 select-none text-stone-400">
               {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' '}
             </span>
             {line.value || '\u00A0'}

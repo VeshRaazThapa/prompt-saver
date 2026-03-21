@@ -54,19 +54,41 @@ function PromptLibrary() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* Page heading (visually subtle but semantically correct) */}
+      <h1 className="sr-only">Prompt Library</h1>
+
+      {/* Mobile filter pills (FINDING-003 fix: visible on small screens) */}
+      <div className="mb-4 flex flex-wrap gap-2 lg:hidden">
+        {(['all', 'favorites', 'archived'] as FilterType[]).map((f) => (
+          <button
+            key={f}
+            onClick={() => { setFilter(f); setTagFilter(null); }}
+            className={`min-h-[44px] rounded-full px-4 text-sm font-medium transition-colors duration-150 ${
+              filter === f && !tagFilter
+                ? 'bg-primary text-white'
+                : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-400'
+            }`}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-6">
-        {/* Sidebar: Tags + Filters */}
+        {/* Sidebar: Tags + Filters (desktop only) */}
         <aside className="hidden w-48 shrink-0 lg:block">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-stone-400">
             Filter
-          </h3>
+          </span>
           <div className="space-y-1">
             {(['all', 'favorites', 'archived'] as FilterType[]).map((f) => (
               <button
                 key={f}
                 onClick={() => { setFilter(f); setTagFilter(null); }}
-                className={`block w-full rounded px-2 py-1 text-left text-sm ${
-                  filter === f && !tagFilter ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-600 hover:bg-gray-50'
+                className={`block w-full min-h-[44px] rounded-md px-3 text-left text-sm transition-colors duration-150 ${
+                  filter === f && !tagFilter
+                    ? 'bg-primary-light font-medium text-primary'
+                    : 'text-stone-600 hover:bg-stone-50'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -76,21 +98,21 @@ function PromptLibrary() {
 
           {allTags.length > 0 && (
             <>
-              <h3 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <span className="mb-2 mt-6 block text-[11px] font-semibold uppercase tracking-wider text-stone-400">
                 Tags
-              </h3>
+              </span>
               <div className="flex flex-wrap gap-1">
                 {allTags.map(({ tag, count }) => (
                   <button
                     key={tag}
                     onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
-                    className={`rounded px-2 py-0.5 text-xs ${
+                    className={`rounded px-2 py-1 text-xs transition-colors duration-150 ${
                       tagFilter === tag
-                        ? 'bg-blue-100 font-medium text-blue-800'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-primary-light font-medium text-primary'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                     }`}
                   >
-                    {tag} <span className="text-gray-400">({count})</span>
+                    {tag} <span className="text-stone-400">({count})</span>
                   </button>
                 ))}
               </div>
@@ -100,14 +122,14 @@ function PromptLibrary() {
 
         {/* Main content */}
         <div className="flex-1">
-          {/* Search + Sort bar */}
+          {/* Search + Sort bar (FINDING-005 fix: removed duplicate nav search — this is the only one) */}
           <div className="mb-4 flex items-center gap-3">
             <input
               type="text"
-              placeholder="Search prompts..."
+              placeholder="Search prompts…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 min-h-[44px] rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 transition-colors duration-150 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             />
             <select
               value={`${sortBy}-${sortOrder}`}
@@ -116,7 +138,7 @@ function PromptLibrary() {
                 setSortBy(by);
                 setSortOrder(order);
               }}
-              className="rounded-md border border-gray-300 px-2 py-2 text-sm"
+              className="min-h-[44px] rounded-md border border-stone-200 bg-white px-2 py-2 text-sm text-stone-700 transition-colors duration-150 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <option value="updated_at-desc">Recently updated</option>
               <option value="created_at-desc">Recently created</option>
@@ -128,13 +150,19 @@ function PromptLibrary() {
           {/* Prompts grid */}
           {filteredPrompts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-lg text-gray-500">
-                {searchQuery || tagFilter ? 'No prompts match your search.' : 'No prompts yet.'}
+              {/* FINDING-004 fix: warm empty state with icon */}
+              <svg className="mb-4 h-16 w-16 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <p className="text-lg text-stone-500">
+                {searchQuery || tagFilter
+                  ? 'No prompts match your search.'
+                  : "Your prompt library is empty \u2014 let\u2019s get started."}
               </p>
               {!searchQuery && !tagFilter && (
                 <Link
                   href="/prompts/new"
-                  className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="mt-4 inline-flex min-h-[44px] items-center rounded-md bg-primary px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-primary-hover"
                 >
                   Create your first prompt
                 </Link>
@@ -157,7 +185,6 @@ function PromptLibrary() {
         </div>
       </div>
 
-      {/* Delete confirmation */}
       <ConfirmModal
         isOpen={deleteId !== null}
         onClose={() => setDeleteId(null)}

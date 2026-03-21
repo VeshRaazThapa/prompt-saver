@@ -22,10 +22,7 @@ export function TagInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredSuggestions = suggestions.filter(
-    (s) =>
-      s.toLowerCase().includes(input.toLowerCase()) &&
-      !tags.includes(s) &&
-      input.length > 0
+    (s) => s.toLowerCase().includes(input.toLowerCase()) && !tags.includes(s) && input.length > 0
   );
 
   const addTag = (tag: string) => {
@@ -52,17 +49,17 @@ export function TagInput({
 
   return (
     <div className="w-full">
-      <div className="flex flex-wrap gap-1.5 rounded-md border border-gray-300 px-2 py-1.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+      <div className="flex flex-wrap gap-1.5 rounded-md border border-stone-200 px-2 py-1.5 transition-colors duration-150 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
         {tags.map((tag, i) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+            className="inline-flex items-center gap-1 rounded bg-primary-light px-2 py-0.5 text-xs font-medium text-primary"
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(i)}
-              className="text-blue-600 hover:text-blue-900"
+              className="text-primary/60 hover:text-primary"
             >
               &times;
             </button>
@@ -72,27 +69,24 @@ export function TagInput({
           ref={inputRef}
           type="text"
           value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-            setShowSuggestions(true);
-          }}
+          onChange={(e) => { setInput(e.target.value); setShowSuggestions(true); }}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          placeholder={tags.length === 0 ? 'Add tags (comma to add)...' : ''}
-          className="min-w-[120px] flex-1 border-none p-0 text-sm focus:outline-none focus:ring-0"
+          placeholder={tags.length === 0 ? 'Add tags (comma to add)…' : ''}
+          className="min-w-[120px] flex-1 border-none p-0 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-0"
         />
       </div>
 
       {showSuggestions && filteredSuggestions.length > 0 && (
-        <div className="mt-1 max-h-32 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm">
+        <div className="mt-1 max-h-32 overflow-y-auto rounded-md border border-stone-200 bg-white shadow-sm">
           {filteredSuggestions.slice(0, 8).map((s) => (
             <button
               key={s}
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => addTag(s)}
-              className="block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+              className="block w-full px-3 py-1.5 text-left text-sm text-stone-700 transition-colors duration-150 hover:bg-stone-50"
             >
               {s}
             </button>

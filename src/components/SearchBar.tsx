@@ -24,13 +24,13 @@ export function SearchBar({ className = '' }: SearchBarProps) {
     <form onSubmit={handleSubmit} className={`relative ${className}`}>
       <input
         type="text"
-        placeholder="Search prompts..."
+        placeholder="Search prompts…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 pl-9 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full min-h-[44px] rounded-md border border-stone-200 bg-white px-3 py-2 pl-9 text-sm text-stone-900 transition-colors duration-150 ease-out placeholder:text-stone-400 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       />
       <svg
-        className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+        className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

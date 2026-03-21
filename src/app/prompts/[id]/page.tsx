@@ -23,27 +23,18 @@ export default function EditPromptPage() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-      e.preventDefault();
-      setShowSaveModal(true);
-    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); setShowSaveModal(true); }
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <div className="flex min-h-[60vh] items-center justify-center"><LoadingSpinner size="lg" /></div>;
   }
 
   if (!prompt) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">Prompt not found.</p>
-        <Link href="/" className="text-sm text-blue-600 hover:underline">
-          Back to library
-        </Link>
+        <p className="text-stone-500">Prompt not found.</p>
+        <Link href="/" className="text-sm text-primary hover:underline">Back to library</Link>
       </div>
     );
   }
@@ -52,21 +43,16 @@ export default function EditPromptPage() {
     <div className="mx-auto max-w-4xl px-4 py-6" onKeyDown={handleKeyDown}>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/" className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
             &larr; Library
           </Link>
           {prompt.metadata.version_count > 0 && (
-            <Link
-              href={`/prompts/${id}/versions`}
-              className="text-sm text-blue-600 hover:underline"
-            >
+            <Link href={`/prompts/${id}/versions`} className="text-sm text-primary hover:underline">
               History ({prompt.metadata.version_count} versions)
             </Link>
           )}
         </div>
-        <Button onClick={() => setShowSaveModal(true)} isLoading={saving}>
-          Save Version
-        </Button>
+        <Button onClick={() => setShowSaveModal(true)} isLoading={saving}>Save Version</Button>
       </div>
 
       <PromptEditor
@@ -82,7 +68,6 @@ export default function EditPromptPage() {
         hasUnsavedChanges={hasUnsavedChanges}
       />
 
-      {/* Save Version Modal */}
       <Modal
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
@@ -90,32 +75,21 @@ export default function EditPromptPage() {
         size="sm"
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setShowSaveModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveVersion} isLoading={saving}>
-              Save Version
-            </Button>
+            <Button variant="ghost" onClick={() => setShowSaveModal(false)}>Cancel</Button>
+            <Button onClick={handleSaveVersion} isLoading={saving}>Save Version</Button>
           </div>
         }
       >
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Change summary (optional)
-          </label>
+          <label className="mb-1 block text-sm font-medium text-stone-600">Change summary (optional)</label>
           <input
             type="text"
             value={changeSummary}
             onChange={(e) => setChangeSummary(e.target.value)}
             placeholder="What changed? e.g., 'Improved evaluation criteria'"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[44px] rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-900 transition-colors duration-150 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSaveVersion();
-              }
-            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveVersion(); } }}
           />
         </div>
       </Modal>

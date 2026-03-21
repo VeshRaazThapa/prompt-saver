@@ -11,45 +11,31 @@ import Link from 'next/link';
 export default function VersionHistoryPage() {
   const { id } = useParams<{ id: string }>();
   const {
-    versions,
-    loading,
-    selected,
-    setSelected,
-    compareWith,
-    setCompareWith,
-    compareMode,
-    toggleCompareMode,
-    restoreVersion,
+    versions, loading, selected, setSelected,
+    compareWith, setCompareWith, compareMode, toggleCompareMode, restoreVersion,
   } = useVersions(id);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <div className="flex min-h-[60vh] items-center justify-center"><LoadingSpinner size="lg" /></div>;
   }
 
   if (versions.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">No versions yet.</p>
-        <Link href={`/prompts/${id}`} className="text-sm text-blue-600 hover:underline">
-          Back to editor
-        </Link>
+        <p className="text-stone-500">No versions yet.</p>
+        <Link href={`/prompts/${id}`} className="text-sm text-primary hover:underline">Back to editor</Link>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/prompts/${id}`} className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href={`/prompts/${id}`} className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
             &larr; Back to editor
           </Link>
-          <h1 className="text-lg font-semibold text-gray-900">Version History</h1>
+          <h1 className="text-lg font-semibold text-stone-900">Version History</h1>
         </div>
         <div className="flex items-center gap-2">
           {versions.length >= 2 && (
@@ -70,7 +56,6 @@ export default function VersionHistoryPage() {
       </div>
 
       <div className="flex gap-6">
-        {/* Left: Version Timeline */}
         <aside className="w-64 shrink-0">
           <VersionTimeline
             versions={versions}
@@ -82,7 +67,6 @@ export default function VersionHistoryPage() {
           />
         </aside>
 
-        {/* Right: Content or Diff */}
         <div className="flex-1">
           {compareMode && selected && compareWith ? (
             <DiffViewer
@@ -92,21 +76,17 @@ export default function VersionHistoryPage() {
               newLabel={`v${selected.version_number}`}
             />
           ) : selected ? (
-            <div className="rounded-md border border-gray-200 bg-white">
-              <div className="border-b border-gray-100 px-4 py-2">
+            <div className="rounded-lg border border-stone-200 bg-white">
+              <div className="border-b border-stone-100 px-4 py-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900">
-                    Version {selected.version_number}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(selected.created_at).toLocaleString()}
-                  </span>
+                  <span className="font-medium text-stone-900">Version {selected.version_number}</span>
+                  <span className="text-xs text-stone-400">{new Date(selected.created_at).toLocaleString()}</span>
                 </div>
                 {selected.change_summary && (
-                  <p className="mt-0.5 text-sm text-gray-500">{selected.change_summary}</p>
+                  <p className="mt-0.5 text-sm text-stone-500">{selected.change_summary}</p>
                 )}
               </div>
-              <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-gray-800">
+              <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-stone-800">
                 {selected.content}
               </pre>
             </div>

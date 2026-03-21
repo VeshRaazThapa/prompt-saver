@@ -35,28 +35,28 @@ export function VersionTimeline({
                 onSelect(version);
               }
             }}
-            className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+            className={`w-full rounded-md px-3 py-2 text-left text-sm transition-all duration-150 ease-out ${
               isSelected
-                ? 'bg-blue-50 ring-1 ring-blue-200'
+                ? 'bg-primary-light ring-1 ring-primary/30'
                 : isCompare
-                  ? 'bg-orange-50 ring-1 ring-orange-200'
-                  : 'hover:bg-gray-50'
+                  ? 'bg-amber-50 ring-1 ring-amber-200'
+                  : 'hover:bg-stone-50'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">v{version.version_number}</span>
-              <span className="text-xs text-gray-400">
+              <span className="font-medium text-stone-900">v{version.version_number}</span>
+              <span className="text-xs text-stone-400">
                 {new Date(version.created_at).toLocaleDateString()}
               </span>
             </div>
             {version.change_summary && (
-              <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">
+              <p className="mt-0.5 text-xs text-stone-500 line-clamp-1">
                 {version.change_summary}
               </p>
             )}
             {(isSelected || isCompare) && (
               <span className={`mt-1 inline-block rounded px-1 text-xs ${
-                isSelected ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                isSelected ? 'bg-primary-light text-primary' : 'bg-amber-100 text-amber-700'
               }`}>
                 {isSelected ? 'viewing' : 'comparing'}
               </span>

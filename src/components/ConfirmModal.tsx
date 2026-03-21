@@ -41,7 +41,7 @@ export function ConfirmModal({
         </div>
       }
     >
-      <p className="text-sm text-gray-600">{message}</p>
+      <p className="text-sm text-stone-600">{message}</p>
     </Modal>
   );
 }
