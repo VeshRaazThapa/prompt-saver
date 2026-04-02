@@ -1,7 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/config';
 
-export default function LandingPage(): React.ReactElement {
+export default async function LandingPage(): Promise<React.ReactElement> {
+  const session = await getServerSession(authOptions);
+  if (session) {
+    redirect('/app');
+  }
+
   return (
     <div className="bg-stone-50 font-body">
       {/* Nav */}
