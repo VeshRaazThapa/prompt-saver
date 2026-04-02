@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 
 function SignInContent() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/';
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/app';
   const [isLoading, setIsLoading] = useState(false);
   const [providers, setProviders] = useState<Record<string, { id: string; name: string }> | null>(null);
 
