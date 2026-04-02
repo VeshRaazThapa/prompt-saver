@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut, getProviders } from 'next-auth/react';
 import { SearchBar } from './SearchBar';
@@ -39,10 +40,12 @@ export function Navigation() {
             {session?.user ? (
               <div className="flex items-center gap-2">
                 {session.user.image && (
-                  <img
+                  <Image
                     src={session.user.image}
                     alt={session.user.name ?? ''}
-                    className="h-7 w-7 rounded-full"
+                    width={28}
+                    height={28}
+                    className="rounded-full"
                   />
                 )}
                 <span className="hidden text-sm text-stone-600 sm:inline">
