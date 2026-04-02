@@ -13,3 +13,13 @@ Key rules:
 - All interactive elements need `transition-colors duration-150 ease-out`
 - All interactive elements need `focus-visible:ring-2` accessibility ring
 - Minimum 44px touch targets on all buttons, links, and inputs
+
+## Deploy
+
+When the user says "deploy", run these steps:
+1. `git push origin <current-branch>`
+2. `git checkout main && git merge <branch> && git push origin main`
+3. `git checkout <branch>`
+
+Vercel auto-deploys from `main`. No manual deploy step needed.
+Production URL: https://prompt-saver-two.vercel.app/
