@@ -9,7 +9,7 @@ import { SearchBar } from './SearchBar';
 export function Navigation() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const isLibraryPage = pathname === '/';
+  const isLibraryPage = pathname === '/app';
   const [hasProviders, setHasProviders] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function Navigation() {
     <nav className="border-b border-stone-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-4">
-          <Link href="/" className="shrink-0 font-display text-xl text-stone-900">
+          <Link href="/app" className="shrink-0 font-display text-xl text-stone-900">
             Prompt Saver
           </Link>
 
@@ -30,7 +30,7 @@ export function Navigation() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/prompts/new"
+              href="/app/prompts/new"
               className="rounded-md bg-primary px-3 min-h-[44px] inline-flex items-center text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               + New Prompt
@@ -49,7 +49,7 @@ export function Navigation() {
                   {session.user.name}
                 </span>
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={() => signOut({ callbackUrl: '/app' })}
                   className="min-h-[44px] px-2 text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700"
                 >
                   Sign Out
@@ -57,7 +57,7 @@ export function Navigation() {
               </div>
             ) : hasProviders ? (
               <Link
-                href="/auth/signin"
+                href="/app/auth/signin"
                 className="min-h-[44px] inline-flex items-center px-2 text-sm font-medium text-stone-600 transition-colors duration-150 hover:text-stone-900"
               >
                 Sign In

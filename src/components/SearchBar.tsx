@@ -14,9 +14,9 @@ export function SearchBar({ className = '' }: SearchBarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/?q=${encodeURIComponent(query.trim())}`);
+      router.push(`/app?q=${encodeURIComponent(query.trim())}`);
     } else {
-      router.push('/');
+      router.push('/app');
     }
   };
 

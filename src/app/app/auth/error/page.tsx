@@ -44,13 +44,13 @@ function ErrorContent() {
 
           <div className="space-y-3">
             <Link
-              href="/auth/signin"
+              href="/app/auth/signin"
               className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-white hover:bg-blue-700"
             >
               Try Again
             </Link>
             <Link
-              href="/"
+              href="/app"
               className="block w-full rounded-md bg-gray-200 px-4 py-2 text-center text-gray-900 hover:bg-gray-300"
             >
               Go Home

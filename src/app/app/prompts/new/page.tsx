@@ -16,7 +16,7 @@ export default function NewPromptPage() {
     if (!draft.content.trim()) { setError('Content is required'); return; }
     setError('');
     const newId = await createPrompt();
-    router.push(`/prompts/${newId}`);
+    router.push(`/app/prompts/${newId}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

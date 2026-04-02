@@ -1,3 +1,211 @@
+# Marketing Landing Page Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a 5-section marketing landing page at `/` and move the existing prompt library app to `/app`.
+
+**Architecture:** Static server component for the landing page (no client-side state needed). Existing app pages moved under `/app` route group. Landing page is a single `page.tsx` with section components.
+
+**Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS, Instrument Serif + DM Sans + JetBrains Mono fonts (already loaded).
+
+**Spec:** `docs/superpowers/specs/2026-04-02-marketing-landing-page-design.md`
+
+---
+
+## File Structure
+
+### Files to Create
+| File | Responsibility |
+|------|---------------|
+| `src/app/(marketing)/page.tsx` | Landing page — all 5 sections |
+| `src/app/(marketing)/layout.tsx` | Marketing layout — just the marketing nav, no app nav |
+| `src/app/(app)/layout.tsx` | App layout — existing nav, providers, error boundary |
+| `src/app/(app)/page.tsx` | Prompt library (moved from `src/app/page.tsx`) |
+
+### Files to Move
+| From | To | Notes |
+|------|-----|-------|
+| `src/app/page.tsx` | `src/app/(app)/page.tsx` | Prompt library becomes `/app` |
+| `src/app/prompts/` | `src/app/(app)/prompts/` | All prompt pages under `/app` |
+| `src/app/auth/` | `src/app/(app)/auth/` | Auth pages under `/app` |
+
+### Files to Modify
+| File | Changes |
+|------|---------|
+| `src/app/layout.tsx` | Remove Navigation/Providers — those go in route group layouts |
+| `src/components/Navigation.tsx` | Update links: `/` → `/app`, `/prompts/new` → `/app/prompts/new` |
+| `src/components/SearchBar.tsx` | Update push target: `/?q=` → `/app?q=` |
+| `src/hooks/usePrompt.ts` | Update router.push for new prompt redirect |
+
+---
+
+## Task 1: Create Route Groups and Move App Pages
+
+**Files:**
+- Create: `src/app/(app)/layout.tsx`
+- Create: `src/app/(marketing)/layout.tsx`
+- Move: `src/app/page.tsx` → `src/app/(app)/page.tsx`
+- Move: `src/app/prompts/` → `src/app/(app)/prompts/`
+- Move: `src/app/auth/` → `src/app/(app)/auth/`
+- Modify: `src/app/layout.tsx`
+
+Next.js route groups `(marketing)` and `(app)` share the same URL space but get different layouts. `(marketing)` gets `/`, `(app)` gets `/app` — wait, route groups don't add URL segments. We need a different approach.
+
+**Correct approach:** Use `/app` as an actual route segment, not a route group.
+
+- [ ] **Step 1: Create the `/app` directory and move pages**
+
+```bash
+mkdir -p src/app/app/prompts
+mv src/app/prompts/new src/app/app/prompts/new
+mv "src/app/prompts/[id]" "src/app/app/prompts/[id]"
+rmdir src/app/prompts 2>/dev/null || true
+```
+
+- [ ] **Step 2: Move the prompt library page to `/app`**
+
+Copy `src/app/page.tsx` to `src/app/app/page.tsx`:
+
+```bash
+cp src/app/page.tsx src/app/app/page.tsx
+```
+
+- [ ] **Step 3: Create app layout at `src/app/app/layout.tsx`**
+
+```typescript
+// src/app/app/layout.tsx
+import React from 'react';
+import { Navigation } from '@/components/Navigation';
+import { Providers } from '@/components/Providers';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
+  return (
+    <ErrorBoundary>
+      <Providers>
+        <Navigation />
+        <main className="min-h-screen bg-stone-50">{children}</main>
+      </Providers>
+    </ErrorBoundary>
+  );
+}
+```
+
+- [ ] **Step 4: Move auth pages under `/app`**
+
+```bash
+mv src/app/auth src/app/app/auth
+```
+
+- [ ] **Step 5: Simplify root layout — remove app-specific wrappers**
+
+Replace `src/app/layout.tsx`:
+
+```typescript
+// src/app/layout.tsx
+import type { Metadata } from 'next';
+import React from 'react';
+import '../styles/globals.css';
+
+export const metadata: Metadata = {
+  title: 'Prompt Saver',
+  description: 'Save, version, and search your AI prompts. Free, no signup.',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
+  return (
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+- [ ] **Step 6: Update Navigation links**
+
+In `src/components/Navigation.tsx`, update all internal links:
+- Logo `href="/"` → `href="/app"`
+- `href="/prompts/new"` → `href="/app/prompts/new"`
+- `href="/auth/signin"` → `href="/app/auth/signin"`
+- `signOut({ callbackUrl: '/' })` → `signOut({ callbackUrl: '/app' })`
+
+- [ ] **Step 7: Update SearchBar push target**
+
+In `src/components/SearchBar.tsx`:
+- `router.push('/?q=...')` → `router.push('/app?q=...')`
+- `router.push('/')` → `router.push('/app')`
+
+- [ ] **Step 8: Update links in app pages**
+
+In `src/app/app/page.tsx`:
+- `href="/prompts/new"` → `href="/app/prompts/new"`
+
+In `src/app/app/prompts/[id]/page.tsx`:
+- `href="/"` (Library link) → `href="/app"`
+- `href={'/prompts/${id}/versions'}` → `href={'/app/prompts/${id}/versions'}`
+
+In `src/app/app/prompts/[id]/versions/page.tsx`:
+- `href={'/prompts/${id}'}` → `href={'/app/prompts/${id}'}`
+
+In `src/app/app/prompts/new/page.tsx`:
+- `router.push('/')` → `router.push('/app')`
+- `router.push('/prompts/${newId}')` → `router.push('/app/prompts/${newId}')`
+
+In `src/hooks/usePrompt.ts` — no router usage, so no changes needed.
+
+In `src/components/PromptCard.tsx`:
+- `href={'/prompts/${prompt.id}'}` → `href={'/app/prompts/${prompt.id}'}`
+
+- [ ] **Step 9: Verify build**
+
+```bash
+npx tsc --noEmit && npm run build
+```
+
+All routes should now be:
+- `/` — empty (will be landing page in Task 2)
+- `/app` — prompt library
+- `/app/prompts/new` — create prompt
+- `/app/prompts/[id]` — edit prompt
+- `/app/prompts/[id]/versions` — version history
+- `/app/auth/signin` — sign in
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add -A
+git commit -m "refactor: move app pages under /app route, prepare for marketing landing page"
+```
+
+---
+
+## Task 2: Build the Landing Page
+
+**Files:**
+- Create: `src/app/page.tsx` (the landing page — replaces the moved file)
+
+- [ ] **Step 1: Create the landing page**
+
+Write `src/app/page.tsx` — a server component (no 'use client') with all 5 sections inline. The full page in one file since it's static content with no shared components.
+
+```typescript
+// src/app/page.tsx
 import React from 'react';
 import Link from 'next/link';
 
@@ -195,8 +403,66 @@ export default function LandingPage(): React.ReactElement {
 
       {/* Footer */}
       <footer className="border-t border-stone-200 py-8 text-center text-[13px] text-stone-400">
-        <p>Prompt Saver</p>
+        <p>Built by <a href="https://maitriservices.com" className="text-primary hover:underline">Maitri</a></p>
       </footer>
     </div>
   );
 }
+```
+
+- [ ] **Step 2: Verify build**
+
+```bash
+npx tsc --noEmit && npm run build
+```
+
+Expected routes:
+```
+○ /                    (landing page)
+○ /app                 (prompt library)
+○ /app/auth/signin
+○ /app/prompts/new
+ƒ /app/prompts/[id]
+ƒ /app/prompts/[id]/versions
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add -A
+git commit -m "feat: add marketing landing page with 5 sections — hero, pain, how-it-works, features, CTA"
+```
+
+---
+
+## Task 3: Visual Verification and Deploy
+
+- [ ] **Step 1: Start dev server and screenshot**
+
+```bash
+npx next dev -p 3847 &
+sleep 6
+```
+
+Browse to `http://localhost:3847` — verify:
+- Landing page loads with all 5 sections
+- "Start Saving Prompts" button links to `/app`
+- App at `/app` works (library, create, edit, versions)
+- Responsive on mobile (hero stacks, cards stack)
+
+- [ ] **Step 2: Fix any issues found**
+
+- [ ] **Step 3: Push and deploy**
+
+```bash
+git push origin agent-v2-works
+```
+
+Vercel auto-deploys. Verify at `https://prompt-saver-two.vercel.app/`.
+
+- [ ] **Step 4: Commit any final fixes**
+
+```bash
+git add -A
+git commit -m "fix: landing page polish and deploy verification"
+```

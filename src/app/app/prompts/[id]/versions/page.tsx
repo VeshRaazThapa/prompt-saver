@@ -23,7 +23,7 @@ export default function VersionHistoryPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p className="text-stone-500">No versions yet.</p>
-        <Link href={`/prompts/${id}`} className="text-sm text-primary hover:underline">Back to editor</Link>
+        <Link href={`/app/prompts/${id}`} className="text-sm text-primary hover:underline">Back to editor</Link>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function VersionHistoryPage() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/prompts/${id}`} className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
+          <Link href={`/app/prompts/${id}`} className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
             &larr; Back to editor
           </Link>
           <h1 className="text-lg font-semibold text-stone-900">Version History</h1>

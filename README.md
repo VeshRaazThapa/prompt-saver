@@ -1,6 +1,8 @@
 # Prompt Saver - LLM Prompt Intelligence Platform
 
-A full-stack Next.js SaaS application enabling AI practitioners to create, version, test, and collaborate on LLM prompts across multiple providers (ChatGPT, Claude, Gemini).
+**Live:** https://prompt-saver-two.vercel.app/
+
+A local-first prompt management tool for saving, versioning, and searching LLM prompts. Built with Next.js, IndexedDB, and a warm stone/teal design system.
 
 ## Features (MVP - Phase 1)
 

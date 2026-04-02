@@ -65,7 +65,7 @@ function SignInContent() {
               <p className="text-sm text-gray-500">
                 Sign-in is not configured yet. The app works fully without it.
               </p>
-              <a href="/" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
+              <a href="/app" className="mt-4 inline-block text-sm text-primary hover:underline">
                 Go to Prompt Library
               </a>
             </div>

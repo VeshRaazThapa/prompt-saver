@@ -34,7 +34,7 @@ export default function EditPromptPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p className="text-stone-500">Prompt not found.</p>
-        <Link href="/" className="text-sm text-primary hover:underline">Back to library</Link>
+        <Link href="/app" className="text-sm text-primary hover:underline">Back to library</Link>
       </div>
     );
   }
@@ -43,11 +43,11 @@ export default function EditPromptPage() {
     <div className="mx-auto max-w-4xl px-4 py-6" onKeyDown={handleKeyDown}>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
+          <Link href="/app" className="text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700">
             &larr; Library
           </Link>
           {prompt.metadata.version_count > 0 && (
-            <Link href={`/prompts/${id}/versions`} className="text-sm text-primary hover:underline">
+            <Link href={`/app/prompts/${id}/versions`} className="text-sm text-primary hover:underline">
               History ({prompt.metadata.version_count} versions)
             </Link>
           )}

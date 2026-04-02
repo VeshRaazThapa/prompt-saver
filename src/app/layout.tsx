@@ -1,13 +1,10 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import '../styles/globals.css';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Navigation } from '@/components/Navigation';
-import { Providers } from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'Prompt Saver',
-  description: 'Save, version, and search your LLM prompts',
+  description: 'Save, version, and search your AI prompts. Free, no signup.',
 };
 
 export default function RootLayout({
@@ -25,14 +22,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <ErrorBoundary>
-          <Providers>
-            <Navigation />
-            <main className="min-h-screen bg-stone-50">{children}</main>
-          </Providers>
-        </ErrorBoundary>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
