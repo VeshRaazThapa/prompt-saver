@@ -195,7 +195,7 @@ export default function LandingPage(): React.ReactElement {
 
       {/* Footer */}
       <footer className="border-t border-stone-200 py-8 text-center text-[13px] text-stone-400">
-        <p>Built by <a href="https://maitriservices.com" className="text-primary hover:underline">Maitri</a></p>
+        <p>Prompt Saver</p>
       </footer>
     </div>
   );
