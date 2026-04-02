@@ -32,7 +32,7 @@ export function PromptCard({
         </svg>
       </button>
 
-      <Link href={`/prompts/${prompt.id}`} className="block">
+      <Link href={`/app/prompts/${prompt.id}`} className="block">
         <h3 className="pr-10 text-base font-semibold text-stone-900 line-clamp-2">
           {prompt.title}
         </h3>
