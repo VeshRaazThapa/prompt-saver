@@ -76,18 +76,35 @@ export class IndexedDBPromptRepository implements IPromptRepository {
 
   async delete(id: string): Promise<boolean> {
     const db = await openDB();
-    const tx = db.transaction([STORES.PROMPTS], 'readwrite');
-    const store = tx.objectStore(STORES.PROMPTS);
+    const tx = db.transaction([STORES.PROMPTS, STORES.PROMPT_VERSIONS], 'readwrite');
+    const promptStore = tx.objectStore(STORES.PROMPTS);
+    const versionStore = tx.objectStore(STORES.PROMPT_VERSIONS);
+    const versionIndex = versionStore.index(INDEXES.PROMPT_VERSIONS.PROMPT_ID);
 
     return new Promise((resolve, reject) => {
-      const request = store.delete(id);
+      // Delete all versions first
+      const versionsRequest = versionIndex.getAll(id);
 
-      request.onsuccess = () => {
-        resolve(true);
+      versionsRequest.onsuccess = () => {
+        const versions = versionsRequest.result;
+        for (const version of versions) {
+          versionStore.delete(version.id);
+        }
+
+        // Then delete the prompt
+        const deleteRequest = promptStore.delete(id);
+
+        deleteRequest.onsuccess = () => {
+          resolve(true);
+        };
+
+        deleteRequest.onerror = () => {
+          reject(new Error('Failed to delete prompt'));
+        };
       };
 
-      request.onerror = () => {
-        reject(new Error('Failed to delete prompt'));
+      versionsRequest.onerror = () => {
+        reject(new Error('Failed to find prompt versions for deletion'));
       };
     });
   }
@@ -175,6 +192,7 @@ export class IndexedDBPromptRepository implements IPromptRepository {
           return (
             prompt.title.toLowerCase().includes(lowerQuery) ||
             prompt.description?.toLowerCase().includes(lowerQuery) === true ||
+            prompt.content?.toLowerCase().includes(lowerQuery) === true ||
             prompt.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
           );
         });

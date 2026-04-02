@@ -8,32 +8,30 @@
   }
 
   body {
-    @apply bg-white text-gray-900 dark:bg-slate-950 dark:text-white;
+    @apply bg-stone-50 text-stone-900 font-body antialiased;
   }
 
-  button {
-    @apply transition-colors duration-200;
+  /* Global transitions on interactive elements */
+  button, a, input, textarea, select {
+    @apply transition-colors duration-150 ease-out;
   }
 
-  a {
-    @apply text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300;
-  }
-}
-
-@layer components {
-  .container {
-    @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
-  }
-
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  /* Focus-visible accessibility ring */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
   }
 
-  .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply btn bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600;
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
