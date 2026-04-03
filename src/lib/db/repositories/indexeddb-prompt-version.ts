@@ -42,8 +42,36 @@ export class IndexedDBPromptVersionRepository implements IPromptVersionRepositor
     });
   }
 
-  async update(_id: string, _updates: Partial<PromptVersion>): Promise<PromptVersion> {
-    throw new Error('Prompt versions are immutable and cannot be updated');
+  async update(id: string, updates: Partial<PromptVersion>): Promise<PromptVersion> {
+    // Only the `result` field is mutable on a version
+    const allowedKeys = Object.keys(updates).filter((k) => k !== 'result');
+    if (allowedKeys.length > 0) {
+      throw new Error('Prompt versions are immutable — only the result field can be updated');
+    }
+
+    const db = await openDB();
+    const tx = db.transaction([STORES.PROMPT_VERSIONS], 'readwrite');
+    const store = tx.objectStore(STORES.PROMPT_VERSIONS);
+
+    return new Promise((resolve, reject) => {
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = () => {
+        const existing = getRequest.result as PromptVersion | undefined;
+        if (!existing) {
+          reject(new NotFoundError('PromptVersion', id));
+          return;
+        }
+
+        const updated = { ...existing, result: updates.result };
+        const putRequest = store.put(updated);
+
+        putRequest.onsuccess = () => resolve(updated);
+        putRequest.onerror = () => reject(new Error('Failed to update prompt version result'));
+      };
+
+      getRequest.onerror = () => reject(new Error('Failed to find prompt version'));
+    });
   }
 
   async delete(id: string): Promise<boolean> {

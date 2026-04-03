@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useVersions } from '@/hooks/useVersions';
 import { VersionTimeline } from '@/components/VersionTimeline';
 import { DiffViewer } from '@/components/DiffViewer';
+import { ResultEditor } from '@/components/ResultEditor';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Link from 'next/link';
@@ -12,8 +14,28 @@ export default function VersionHistoryPage() {
   const { id } = useParams<{ id: string }>();
   const {
     versions, loading, selected, setSelected,
-    compareWith, setCompareWith, compareMode, toggleCompareMode, restoreVersion,
+    compareWith, setCompareWith, compareMode, toggleCompareMode, restoreVersion, updateResult,
   } = useVersions(id);
+  const [resultDraft, setResultDraft] = useState('');
+  const [resultSaving, setResultSaving] = useState(false);
+  const [resultDirty, setResultDirty] = useState(false);
+
+  // Sync result draft when selected version changes
+  const handleSelectVersion = (version: typeof selected) => {
+    if (version) {
+      setSelected(version);
+      setResultDraft(version.result ?? '');
+      setResultDirty(false);
+    }
+  };
+
+  const handleResultSave = async () => {
+    if (!selected) return;
+    setResultSaving(true);
+    await updateResult(selected.id, resultDraft);
+    setResultSaving(false);
+    setResultDirty(false);
+  };
 
   if (loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><LoadingSpinner size="lg" /></div>;
@@ -61,7 +83,7 @@ export default function VersionHistoryPage() {
             versions={versions}
             selectedId={selected?.id}
             compareId={compareWith?.id}
-            onSelect={setSelected}
+            onSelect={handleSelectVersion}
             onCompareSelect={setCompareWith}
             compareMode={compareMode}
           />
@@ -76,19 +98,28 @@ export default function VersionHistoryPage() {
               newLabel={`v${selected.version_number}`}
             />
           ) : selected ? (
-            <div className="rounded-lg border border-stone-200 bg-white">
-              <div className="border-b border-stone-100 px-4 py-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-stone-900">Version {selected.version_number}</span>
-                  <span className="text-xs text-stone-400">{new Date(selected.created_at).toLocaleString()}</span>
+            <div className="space-y-4">
+              <div className="rounded-lg border border-stone-200 bg-white">
+                <div className="border-b border-stone-100 px-4 py-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-stone-900">Version {selected.version_number}</span>
+                    <span className="text-xs text-stone-400">{new Date(selected.created_at).toLocaleString()}</span>
+                  </div>
+                  {selected.change_summary && (
+                    <p className="mt-0.5 text-sm text-stone-500">{selected.change_summary}</p>
+                  )}
                 </div>
-                {selected.change_summary && (
-                  <p className="mt-0.5 text-sm text-stone-500">{selected.change_summary}</p>
-                )}
+                <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-stone-800">
+                  {selected.content}
+                </pre>
               </div>
-              <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-stone-800">
-                {selected.content}
-              </pre>
+
+              <ResultEditor
+                value={resultDirty ? resultDraft : (selected.result ?? '')}
+                onChange={(val) => { setResultDraft(val); setResultDirty(true); }}
+                onSave={handleResultSave}
+                saving={resultSaving}
+              />
             </div>
           ) : null}
         </div>

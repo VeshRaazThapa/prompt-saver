@@ -37,6 +37,14 @@ export function useVersions(promptId: string) {
     });
   }, [versions]);
 
+  const updateResult = useCallback(async (versionId: string, result: string) => {
+    const repo = getPromptVersionRepository();
+    await repo.update(versionId, { result });
+    // Refresh versions list and selected
+    setVersions((prev) => prev.map((v) => (v.id === versionId ? { ...v, result } : v)));
+    setSelected((prev) => (prev && prev.id === versionId ? { ...prev, result } : prev));
+  }, []);
+
   const restoreVersion = useCallback(async (version: PromptVersion) => {
     const repo = getPromptVersionRepository();
     const latestVersion = await repo.getLatestVersion(promptId);
@@ -71,5 +79,6 @@ export function useVersions(promptId: string) {
     compareMode,
     toggleCompareMode,
     restoreVersion,
+    updateResult,
   };
 }
