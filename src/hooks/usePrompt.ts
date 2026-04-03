@@ -17,6 +17,7 @@ interface PromptDraft {
 export function usePrompt(promptId?: string) {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [draft, setDraft] = useState<PromptDraft>({ title: '', description: '', content: '', tags: [] });
+  const [currentVersionResult, setCurrentVersionResult] = useState('');
   const [loading, setLoading] = useState(!!promptId);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -40,6 +41,14 @@ export function usePrompt(promptId?: string) {
           content: existing.content,
           tags: existing.tags,
         });
+        // Load result from current version
+        if (existing.current_version_id) {
+          const versionRepo = getPromptVersionRepository();
+          const currentVersion = await versionRepo.findById(existing.current_version_id);
+          if (currentVersion) {
+            setCurrentVersionResult(currentVersion.result ?? '');
+          }
+        }
       }
       setLoading(false);
     };
@@ -135,7 +144,7 @@ export function usePrompt(promptId?: string) {
   }, [draft]);
 
   // Save new version
-  const saveVersion = useCallback(async (changeSummary?: string) => {
+  const saveVersion = useCallback(async (changeSummary?: string, result?: string) => {
     if (!prompt) return;
 
     setSaving(true);
@@ -147,6 +156,7 @@ export function usePrompt(promptId?: string) {
       prompt_id: prompt.id,
       version_number: (latestVersion?.version_number ?? 0) + 1,
       content: draft.content,
+      result,
       change_summary: changeSummary,
       created_at: now(),
       previous_version_id: latestVersion?.id,
@@ -182,15 +192,50 @@ export function usePrompt(promptId?: string) {
     setHasUnsavedChanges(false);
   }, [draft, prompt]);
 
+  // Save draft + result to the current version (no new version created)
+  const saveCurrent = useCallback(async (result?: string) => {
+    if (!prompt) return;
+    setSaving(true);
+
+    // Save draft fields to prompt
+    const repo = getPromptRepository();
+    await repo.update(prompt.id, {
+      title: draft.title,
+      description: draft.description || undefined,
+      content: draft.content,
+      tags: draft.tags,
+      updated_at: now(),
+    });
+
+    // Update the current version's content and result
+    if (prompt.current_version_id) {
+      const versionRepo = getPromptVersionRepository();
+      await versionRepo.update(prompt.current_version_id, { result });
+      setCurrentVersionResult(result ?? '');
+    }
+
+    setPrompt((prev) =>
+      prev
+        ? { ...prev, title: draft.title, description: draft.description || undefined, content: draft.content, tags: draft.tags, updated_at: now() }
+        : null
+    );
+    setSaving(false);
+    setLastSaved(now());
+    setHasUnsavedChanges(false);
+    setDirty(false);
+  }, [draft, prompt]);
+
   return {
     prompt,
     draft,
     updateDraft,
+    currentVersionResult,
     loading,
     saving,
     lastSaved,
     hasUnsavedChanges,
     createPrompt,
     saveVersion,
+    saveCurrent,
   };
 }
