@@ -6,6 +6,7 @@ import { useVersions } from '@/hooks/useVersions';
 import { VersionTimeline } from '@/components/VersionTimeline';
 import { DiffViewer } from '@/components/DiffViewer';
 import { ResultEditor } from '@/components/ResultEditor';
+import { Accordion } from '@/components/ui/Accordion';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Link from 'next/link';
@@ -91,12 +92,31 @@ export default function VersionHistoryPage() {
 
         <div className="flex-1">
           {compareMode && selected && compareWith ? (
-            <DiffViewer
-              oldText={compareWith.content}
-              newText={selected.content}
-              oldLabel={`v${compareWith.version_number}`}
-              newLabel={`v${selected.version_number}`}
-            />
+            <div className="space-y-4">
+              <Accordion title="Prompt Content" defaultOpen>
+                <DiffViewer
+                  oldText={compareWith.content}
+                  newText={selected.content}
+                  oldLabel={`v${compareWith.version_number}`}
+                  newLabel={`v${selected.version_number}`}
+                  noBorder
+                />
+              </Accordion>
+
+              <Accordion
+                title="LLM Result"
+                defaultOpen={!!(selected.result || compareWith.result)}
+                badge={!selected.result && !compareWith.result ? 'empty' : undefined}
+              >
+                <DiffViewer
+                  oldText={compareWith.result ?? ''}
+                  newText={selected.result ?? ''}
+                  oldLabel={`v${compareWith.version_number}`}
+                  newLabel={`v${selected.version_number}`}
+                  noBorder
+                />
+              </Accordion>
+            </div>
           ) : selected ? (
             <div className="space-y-4">
               <div className="rounded-lg border border-stone-200 bg-white">
@@ -109,17 +129,27 @@ export default function VersionHistoryPage() {
                     <p className="mt-0.5 text-sm text-stone-500">{selected.change_summary}</p>
                   )}
                 </div>
+              </div>
+
+              <Accordion title="Prompt Content" defaultOpen>
                 <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-stone-800">
                   {selected.content}
                 </pre>
-              </div>
+              </Accordion>
 
-              <ResultEditor
-                value={resultDirty ? resultDraft : (selected.result ?? '')}
-                onChange={(val) => { setResultDraft(val); setResultDirty(true); }}
-                onSave={handleResultSave}
-                saving={resultSaving}
-              />
+              <Accordion
+                title="LLM Result"
+                defaultOpen={!!(resultDirty ? resultDraft : selected.result)}
+                badge={!selected.result && !resultDirty ? 'empty' : undefined}
+              >
+                <ResultEditor
+                  value={resultDirty ? resultDraft : (selected.result ?? '')}
+                  onChange={(val) => { setResultDraft(val); setResultDirty(true); }}
+                  onSave={handleResultSave}
+                  saving={resultSaving}
+                  noBorder
+                />
+              </Accordion>
             </div>
           ) : null}
         </div>
