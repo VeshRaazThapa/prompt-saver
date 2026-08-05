@@ -522,7 +522,9 @@ git commit -m "feat(auth): populate session.user.id and gate sign-in on ALLOWED_
 
 **Interfaces:**
 - Consumes: `requireAuth()` from `src/lib/auth/session.ts`; `getDb()` and tables from Task 1
-- Produces: `getCurrentContext(): Promise<UserContext>` (cached, used by actions), `loadContext(): Promise<UserContext>` (uncached, used by tests), `interface UserContext { userId: string; workspaceId: string }`
+- Produces: `getCurrentContext(): Promise<UserContext>`, `interface UserContext { userId: string; workspaceId: string }`
+
+**Decided before execution:** the design spec said to wrap this in React's `cache()`. This project runs React 18.3.1, which has no `cache` export (verified: `typeof require('react').cache === 'undefined'`). We are **not** using `cache()` and **not** upgrading React as part of this migration. It costs nothing: each Server Action is its own request and calls this once, so there is no repeat call to memoize. Do not import `cache`.
 
 **This is the security chokepoint.** Every action calls it. It is the only place a workspace id originates.
 
@@ -544,16 +546,14 @@ jest.mock('@/lib/auth/session', () => ({
   requireAuth: () => mockSession(),
 }));
 
-// Uses loadContext (the uncached implementation) so repeat-call assertions are
-// deterministic — see the note in the implementation step.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { loadContext: getCurrentContext } = require('@/lib/auth/context') as typeof import('@/lib/auth/context');
+const { getCurrentContext } = require('@/lib/auth/context') as typeof import('@/lib/auth/context');
 
 function sessionFor(id: string, email: string) {
   return { user: { id, email, name: 'Test User', image: null } };
 }
 
-describe('loadContext', () => {
+describe('getCurrentContext', () => {
   beforeEach(async () => {
     await resetDb();
     mockSession.mockReset();
@@ -619,7 +619,6 @@ Expected: FAIL — "Cannot find module '@/lib/auth/context'".
 Create `src/lib/auth/context.ts`:
 
 ```ts
-import { cache } from 'react';
 import { asc, eq } from 'drizzle-orm';
 import { getDb } from '../db/drizzle/client';
 import { users, workspaces } from '../db/drizzle/schema';
@@ -632,10 +631,13 @@ export interface UserContext {
 }
 
 /**
- * The real implementation. Exported so tests can call it directly and get
- * deterministic behavior without depending on React's request-scoped cache.
+ * Resolves the signed-in user, ensuring their row and their single private
+ * workspace both exist.
+ *
+ * Every Server Action starts here. The workspaceId it returns is the ONLY
+ * legitimate source of workspace scoping — never accept one from the client.
  */
-export async function loadContext(): Promise<UserContext> {
+export async function getCurrentContext(): Promise<UserContext> {
   const session = await requireAuth();
   const { id: userId, email, name, image } = session.user;
   const db = getDb();
@@ -666,18 +668,7 @@ export async function loadContext(): Promise<UserContext> {
   await db.insert(workspaces).values({ id: workspaceId, userId, name: 'My Workspace' });
   return { userId, workspaceId };
 }
-
-/**
- * Resolves the signed-in user, ensuring their row and their single private
- * workspace both exist. Wrapped in cache() so it runs once per request.
- *
- * Every Server Action starts here. The workspaceId it returns is the ONLY
- * legitimate source of workspace scoping — never accept one from the client.
- */
-export const getCurrentContext = cache(loadContext);
 ```
-
-> **Two things to verify before moving on.** First, `cache` is exported from `react` only in React 19; `package.json` currently pins `react: ^18.3.0` while Next.js 16 requires 19. Run `node -e "console.log(require('react').version, typeof require('react').cache)"` — you need `19.x` and `function`. If it prints `18.x`, run `npm install --legacy-peer-deps react@19 react-dom@19` and update `package.json`. Second, outside a request scope React's `cache` simply calls through without memoizing rather than throwing, which is why the action tests in Tasks 6 and 7 work unmodified.
 
 - [ ] **Step 4: Run the test to verify it passes**
 

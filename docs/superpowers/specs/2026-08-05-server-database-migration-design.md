@@ -191,9 +191,14 @@ Setting it is an explicit, non-optional deploy step in the rollout.
 ### Lazy bootstrap: `getCurrentContext()`
 
 One helper that reads the session, upserts the user row, ensures exactly one workspace exists,
-and returns `{ userId, workspaceId }`. Wrapped in React's `cache()` so it runs once per request
-regardless of call count. Every Server Action begins with this call and scopes queries to the
-returned `workspaceId`.
+and returns `{ userId, workspaceId }`. Every Server Action begins with this call and scopes
+queries to the returned `workspaceId`.
+
+> **Amended before implementation.** This originally specified wrapping the helper in React's
+> `cache()` for per-request memoization. The project runs React 18.3.1, which has no `cache`
+> export, and upgrading React mid-migration would entangle UI regressions with database bugs.
+> Dropped: each Server Action is its own request and calls the helper once, so there was nothing
+> to memoize.
 
 **Why lazy rather than provisioning in the `signIn` callback:** if a bootstrap write fails during
 sign-in, the user holds a valid session with no workspace and the app stays broken for them until
