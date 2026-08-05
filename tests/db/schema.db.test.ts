@@ -4,11 +4,15 @@
 import { eq, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle/client';
 import { prompts, promptVersions } from '@/lib/db/drizzle/schema';
-import { resetDb, seedUser } from './helpers';
+import { closeDb, resetDb, seedUser } from './helpers';
 
 describe('postgres schema', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  afterAll(async () => {
+    await closeDb();
   });
 
   it('has all four tables', async () => {

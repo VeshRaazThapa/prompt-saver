@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle/client';
 import { users, workspaces } from '@/lib/db/drizzle/schema';
 
+export { closeDb } from '@/lib/db/drizzle/client';
+
 /** Truncates every table. Call in beforeEach so tests never share state. */
 export async function resetDb(): Promise<void> {
   const db = getDb();
