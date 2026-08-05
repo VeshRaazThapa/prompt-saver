@@ -16,7 +16,10 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
       throw new Error('DATABASE_URL is not set');
     }
     // `prepare: false` is REQUIRED behind Neon's transaction-mode pooler.
-    client = postgres(url, { max: 1, prepare: false });
+    // Serverless default is a single connection per invocation; tests raise this
+    // so concurrent-transaction behavior can actually be exercised.
+    const poolMax = Number(process.env['DB_POOL_MAX'] ?? '1');
+    client = postgres(url, { max: poolMax, prepare: false });
     db = drizzle(client, { schema });
   }
   return db;
