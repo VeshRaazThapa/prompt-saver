@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { DrizzlePromptRepository } from '@/lib/db/drizzle/prompt-repository';
-import type { Prompt } from '@/types';
+import type { Prompt, PromptVersion } from '@/types';
 import { closeDb, resetDb, seedUser } from './helpers';
 
 const repo = new DrizzlePromptRepository();
@@ -18,6 +18,17 @@ function makePrompt(overrides: Partial<Prompt> & { id: string; workspace_id: str
     is_favorite: false,
     status: 'active',
     metadata: { version_count: 0 },
+    ...overrides,
+  };
+}
+
+function makeVersion(
+  overrides: Partial<PromptVersion> & { id: string; prompt_id: string }
+): PromptVersion {
+  return {
+    version_number: 1,
+    content: 'draft',
+    created_at: new Date().toISOString(),
     ...overrides,
   };
 }
@@ -135,5 +146,40 @@ describe('DrizzlePromptRepository', () => {
     await expect(repo.update('ghost', { title: 'x' })).rejects.toThrow(
       'Prompt with id ghost not found'
     );
+  });
+
+  it('creates a prompt and its first version atomically', async () => {
+    const result = await repo.createWithFirstVersion(
+      makePrompt({ id: 'p1', workspace_id: workspaceA, title: 'New', content: 'hello' }),
+      makeVersion({ id: 'v1', prompt_id: 'p1', content: 'hello' })
+    );
+
+    expect(result.current_version_id).toBe('v1');
+    expect(result.metadata.version_count).toBe(1);
+
+    const found = await repo.findById('p1');
+    expect(found?.current_version_id).toBe('v1');
+    expect(found?.metadata.version_count).toBe(1);
+  });
+
+  // Proves createPromptAction/duplicatePromptAction can no longer leave an orphaned
+  // prompt row behind when the version insert fails partway through.
+  it('rolls back the prompt row when the version insert fails', async () => {
+    await repo.createWithFirstVersion(
+      makePrompt({ id: 'p1', workspace_id: workspaceA, title: 'First' }),
+      makeVersion({ id: 'dup-version-id', prompt_id: 'p1' })
+    );
+
+    // Reusing the same version id on a different prompt collides with
+    // prompt_versions' primary key — a real Postgres constraint violation,
+    // not a simulated failure.
+    await expect(
+      repo.createWithFirstVersion(
+        makePrompt({ id: 'p2', workspace_id: workspaceA, title: 'Second' }),
+        makeVersion({ id: 'dup-version-id', prompt_id: 'p2' })
+      )
+    ).rejects.toThrow();
+
+    expect(await repo.findById('p2')).toBeNull();
   });
 });

@@ -1,9 +1,9 @@
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
-import type { Prompt } from '@/types';
+import type { Prompt, PromptVersion } from '@/types';
 import type { IPromptRepository } from '../repositories/types';
 import { NotFoundError } from '../../errors';
 import { getDb } from './client';
-import { prompts } from './schema';
+import { prompts, promptVersions } from './schema';
 import { escapeLike, toPrompt } from './mappers';
 
 type FindOptions = Parameters<IPromptRepository['findByWorkspaceId']>[1];
@@ -35,6 +35,63 @@ export class DrizzlePromptRepository implements IPromptRepository {
       throw new Error('Insert returned no row');
     }
     return toPrompt(row);
+  }
+
+  /**
+   * Creates a prompt together with its first version in a single transaction.
+   *
+   * `create()` followed by a separate `createVersionAtomic()` call leaves a window
+   * where the prompt row is committed but the version insert can still fail,
+   * orphaning a prompt with version_count: 0 and no content history. This method
+   * closes that window: prompt insert, version insert, and the prompt update that
+   * points at the new version all happen on one `tx`, so a failure at any step
+   * rolls back everything, including the prompt row.
+   *
+   * Not part of IPromptRepository — it's an addition specific to the "create with
+   * an initial version" use case, not a general CRUD operation.
+   */
+  async createWithFirstVersion(entity: Prompt, version: PromptVersion): Promise<Prompt> {
+    return getDb().transaction(async (tx) => {
+      const [promptRow] = await tx
+        .insert(prompts)
+        .values({
+          id: entity.id,
+          workspaceId: entity.workspace_id,
+          title: entity.title,
+          description: entity.description ?? null,
+          content: entity.content,
+          currentVersionId: null,
+          tags: entity.tags,
+          isFavorite: entity.is_favorite,
+          status: entity.status,
+          versionCount: 0,
+        })
+        .returning();
+      if (promptRow === undefined) {
+        throw new Error('Insert returned no row');
+      }
+
+      await tx.insert(promptVersions).values({
+        id: version.id,
+        promptId: entity.id,
+        versionNumber: 1,
+        content: version.content,
+        result: version.result ?? null,
+        changeSummary: version.change_summary ?? null,
+        previousVersionId: null,
+      });
+
+      const [updatedRow] = await tx
+        .update(prompts)
+        .set({ currentVersionId: version.id, versionCount: 1, updatedAt: new Date() })
+        .where(eq(prompts.id, entity.id))
+        .returning();
+      if (updatedRow === undefined) {
+        throw new Error('Update returned no row');
+      }
+
+      return toPrompt(updatedRow);
+    });
   }
 
   async update(id: string, updates: Partial<Prompt>): Promise<Prompt> {

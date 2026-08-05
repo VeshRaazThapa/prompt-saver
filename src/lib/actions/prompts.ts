@@ -92,24 +92,25 @@ export async function createPromptAction(input: DraftInput): Promise<ActionResul
     const id = generateId();
     const timestamp = now();
 
-    await promptRepo.create({
-      id,
-      workspace_id: workspaceId,
-      title: input.title,
-      ...(input.description !== undefined && input.description !== ''
-        ? { description: input.description }
-        : {}),
-      content: input.content,
-      tags: input.tags,
-      status: 'active',
-      is_favorite: false,
-      current_version_id: '',
-      created_at: timestamp,
-      updated_at: timestamp,
-      metadata: { version_count: 0 },
-    });
-
-    await versionRepo.createVersionAtomic(
+    // One transaction: a prompt with no version (or vice versa) should never be
+    // observable. See DrizzlePromptRepository.createWithFirstVersion.
+    await promptRepo.createWithFirstVersion(
+      {
+        id,
+        workspace_id: workspaceId,
+        title: input.title,
+        ...(input.description !== undefined && input.description !== ''
+          ? { description: input.description }
+          : {}),
+        content: input.content,
+        tags: input.tags,
+        status: 'active',
+        is_favorite: false,
+        current_version_id: '',
+        created_at: timestamp,
+        updated_at: timestamp,
+        metadata: { version_count: 0 },
+      },
       {
         id: generateId(),
         prompt_id: id,
@@ -117,8 +118,7 @@ export async function createPromptAction(input: DraftInput): Promise<ActionResul
         content: input.content,
         change_summary: 'Initial version',
         created_at: timestamp,
-      },
-      id
+      }
     );
 
     return { id };
@@ -175,17 +175,18 @@ export async function duplicatePromptAction(id: string): Promise<ActionResult<nu
     const newId = generateId();
     const timestamp = now();
 
-    await promptRepo.create({
-      ...source,
-      id: newId,
-      title: `Copy of ${source.title}`,
-      current_version_id: '',
-      created_at: timestamp,
-      updated_at: timestamp,
-      metadata: { version_count: 0 },
-    });
-
-    await versionRepo.createVersionAtomic(
+    // One transaction: a prompt with no version (or vice versa) should never be
+    // observable. See DrizzlePromptRepository.createWithFirstVersion.
+    await promptRepo.createWithFirstVersion(
+      {
+        ...source,
+        id: newId,
+        title: `Copy of ${source.title}`,
+        current_version_id: '',
+        created_at: timestamp,
+        updated_at: timestamp,
+        metadata: { version_count: 0 },
+      },
       {
         id: generateId(),
         prompt_id: newId,
@@ -193,8 +194,7 @@ export async function duplicatePromptAction(id: string): Promise<ActionResult<nu
         content: source.content,
         change_summary: 'Duplicated',
         created_at: timestamp,
-      },
-      newId
+      }
     );
 
     return null;
