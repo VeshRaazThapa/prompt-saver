@@ -6,7 +6,17 @@ import { closeDb, resetDb } from './helpers';
 const mockSession = jest.fn();
 jest.mock('@/lib/auth/session', () => ({ requireAuth: () => mockSession() }));
 
+// The isolation/auth-failure tests below deliberately trigger expected errors that
+// run() logs via logger.error. Mocking the logger keeps test output pristine while
+// still letting us assert the logging actually happened (see "refuses to read
+// another user prompt" below) — so a regression that silently drops the log call
+// would still be caught.
+jest.mock('@/lib/logging', () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
+
 import * as actions from '@/lib/actions/prompts';
+import { logger } from '@/lib/logging';
 
 function signInAs(id: string, email: string) {
   mockSession.mockResolvedValue({ user: { id, email, name: id, image: null } });
@@ -21,6 +31,7 @@ describe('prompt actions', () => {
   beforeEach(async () => {
     await resetDb();
     mockSession.mockReset();
+    jest.mocked(logger.error).mockClear();
   });
 
   afterAll(async () => {
@@ -43,17 +54,24 @@ describe('prompt actions', () => {
   // THE ISOLATION GUARD — user A must not reach user B's prompt.
   it('refuses to read another user prompt', async () => {
     signInAs('user-b', 'b@example.com');
-    const { id } = unwrap(await actions.createPromptAction({ title: 'Secret', content: 's', tags: [] }));
+    const { id } = unwrap(
+      await actions.createPromptAction({ title: 'Secret', content: 's', tags: [] })
+    );
 
     signInAs('user-a', 'a@example.com');
     const result = await actions.getPromptAction(id);
 
     expect(result.ok).toBe(false);
+    // The mock above swallows the log line so test output stays clean — assert it
+    // still fired so a regression that stops run() from logging errors is caught.
+    expect(logger.error).toHaveBeenCalled();
   });
 
   it('refuses to delete another user prompt', async () => {
     signInAs('user-b', 'b@example.com');
-    const { id } = unwrap(await actions.createPromptAction({ title: 'Secret', content: 's', tags: [] }));
+    const { id } = unwrap(
+      await actions.createPromptAction({ title: 'Secret', content: 's', tags: [] })
+    );
 
     signInAs('user-a', 'a@example.com');
     expect((await actions.deletePromptAction(id)).ok).toBe(false);
@@ -79,7 +97,9 @@ describe('prompt actions', () => {
 
   it('hides archived prompts from the default view', async () => {
     signInAs('user-a', 'a@example.com');
-    const { id } = unwrap(await actions.createPromptAction({ title: 'Old', content: '', tags: [] }));
+    const { id } = unwrap(
+      await actions.createPromptAction({ title: 'Old', content: '', tags: [] })
+    );
     await actions.archivePromptAction(id);
 
     expect(unwrap(await actions.listPrompts({})).prompts).toHaveLength(0);
@@ -88,7 +108,9 @@ describe('prompt actions', () => {
 
   it('toggles favorite and filters by it', async () => {
     signInAs('user-a', 'a@example.com');
-    const { id } = unwrap(await actions.createPromptAction({ title: 'Fav', content: '', tags: [] }));
+    const { id } = unwrap(
+      await actions.createPromptAction({ title: 'Fav', content: '', tags: [] })
+    );
 
     await actions.toggleFavoriteAction(id);
     expect(unwrap(await actions.listPrompts({ filter: 'favorites' })).prompts).toHaveLength(1);
