@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { isEmailAllowed } from './allowlist';
 
 const providers = [];
 
@@ -16,24 +17,27 @@ export const authOptions: NextAuthOptions = {
   providers,
 
   callbacks: {
-    // Allow all sign-ins — no server-side DB needed
-    async signIn() {
-      return true;
+    // Gate sign-in on the allowlist. Google has already verified this email.
+    async signIn({ user }) {
+      return isEmailAllowed(user.email);
     },
 
-    // Pass Google profile data through the JWT
+    // `token.sub` is Google's stable subject id — our users.id primary key.
     async jwt({ token, user }) {
       if (user) {
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
       }
+      if (typeof token.sub === 'string') {
+        token.userId = token.sub;
+      }
       return token;
     },
 
-    // Expose user info in the session
     async session({ session, token }) {
       if (session.user) {
+        session.user.id = token.userId;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
         session.user.image = token.picture as string | null;
