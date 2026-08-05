@@ -546,8 +546,7 @@ jest.mock('@/lib/auth/session', () => ({
   requireAuth: () => mockSession(),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { getCurrentContext } = require('@/lib/auth/context') as typeof import('@/lib/auth/context');
+import { getCurrentContext } from '@/lib/auth/context';
 
 function sessionFor(id: string, email: string) {
   return { user: { id, email, name: 'Test User', image: null } };
@@ -607,7 +606,7 @@ describe('getCurrentContext', () => {
 });
 ```
 
-> **Note for the implementer:** `getCurrentContext` is wrapped in React's `cache()`, which memoizes per request. Under Jest there is no request scope, so each call re-executes — which is exactly what these tests need. Do not add your own module-level caching.
+> **Note for the implementer:** `getCurrentContext` is a plain async function — no React `cache()`, see the decision above. Do not add module-level caching of your own; these tests depend on each call really executing.
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -1367,8 +1366,7 @@ import { resetDb } from './helpers';
 const mockSession = jest.fn();
 jest.mock('@/lib/auth/session', () => ({ requireAuth: () => mockSession() }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const actions = require('@/lib/actions/prompts') as typeof import('@/lib/actions/prompts');
+import * as actions from '@/lib/actions/prompts';
 
 function signInAs(id: string, email: string) {
   mockSession.mockResolvedValue({ user: { id, email, name: id, image: null } });
@@ -1727,10 +1725,8 @@ import { resetDb } from './helpers';
 const mockSession = jest.fn();
 jest.mock('@/lib/auth/session', () => ({ requireAuth: () => mockSession() }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const prompts = require('@/lib/actions/prompts') as typeof import('@/lib/actions/prompts');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const versions = require('@/lib/actions/versions') as typeof import('@/lib/actions/versions');
+import * as prompts from '@/lib/actions/prompts';
+import * as versions from '@/lib/actions/versions';
 
 function signInAs(id: string, email: string) {
   mockSession.mockResolvedValue({ user: { id, email, name: id, image: null } });
