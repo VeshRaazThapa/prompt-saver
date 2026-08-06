@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - '001-prompt-platform'
+      - 'server-database-migration'
   pull_request:
     branches:
       - main
       - '001-prompt-platform'
+      - 'server-database-migration'
 
 jobs:
   test:
@@ -16,6 +18,20 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: prompt_saver_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -39,8 +55,18 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Run migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/prompt_saver_test
+
       - name: Test
         run: npm run test:coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prompt_saver_test
+          DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/prompt_saver_test
+          NEXTAUTH_SECRET: ci-placeholder-secret
+          NEXTAUTH_URL: http://localhost:3000
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -52,3 +78,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prompt_saver_test
+          DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/prompt_saver_test
+          NEXTAUTH_SECRET: ci-placeholder-secret
+          NEXTAUTH_URL: http://localhost:3000

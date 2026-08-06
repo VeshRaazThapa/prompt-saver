@@ -2,7 +2,7 @@
 
 **Live:** https://prompt-saver-two.vercel.app/
 
-A local-first prompt management tool for saving, versioning, and searching LLM prompts. Built with Next.js, IndexedDB, and a warm stone/teal design system.
+A prompt management tool for saving, versioning, and searching LLM prompts. Built with Next.js, Neon Postgres, and a warm stone/teal design system.
 
 ## Features (MVP - Phase 1)
 
@@ -15,7 +15,7 @@ A local-first prompt management tool for saving, versioning, and searching LLM p
 
 - **Frontend**: Next.js 16, React 18, TypeScript (strict mode)
 - **Styling**: Tailwind CSS (WCAG 2.1 AA accessible)
-- **Storage**: Browser IndexedDB (Phase 1), Firestore (Future)
+- **Storage**: Neon Postgres via Drizzle ORM (server-side, per-user isolated)
 - **Authentication**: Google OAuth via NextAuth.js
 - **Testing**: Jest + React Testing Library
 - **Code Quality**: ESLint, Prettier, TypeScript strict mode
@@ -50,7 +50,12 @@ NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
+DATABASE_URL=postgresql://...-pooler.../neondb?sslmode=require
+DATABASE_URL_UNPOOLED=postgresql://.../neondb?sslmode=require
+ALLOWED_EMAILS=you@example.com
 ```
+
+**Warning:** leaving `ALLOWED_EMAILS` unset lets anyone with a Google account sign in and get their own workspace. Always set it to a comma-separated allowlist of emails before deploying anywhere reachable.
 
 ### 3. Run Development Server
 
@@ -167,7 +172,12 @@ NEXTAUTH_SECRET=<generate-with-: openssl rand -base64 32>
 NEXTAUTH_URL=https://your-production-domain.com
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
+DATABASE_URL=postgresql://...-pooler.../neondb?sslmode=require
+DATABASE_URL_UNPOOLED=postgresql://.../neondb?sslmode=require
+ALLOWED_EMAILS=you@example.com
 ```
+
+**Warning:** leaving `ALLOWED_EMAILS` unset lets anyone with a Google account sign in and get their own workspace. Do not skip it.
 
 ## CI/CD
 
@@ -194,7 +204,9 @@ Tests must pass before merging to `main` branch.
 
 ### Repository Pattern
 
-Database operations use the Repository pattern to enable seamless migration from IndexedDB (Phase 1) to Firestore (Future) without changing service layer code.
+Database access is confined to repository classes implementing the interfaces in
+`src/lib/db/repositories/types.ts`. Server Actions are the only callers; client
+components never touch the database.
 
 ### Immutable Versions
 
@@ -202,7 +214,9 @@ PromptVersions are immutable by design - no in-place edits allowed. This enables
 
 ### Workspace Isolation
 
-All data queries enforce workspace scoping to prevent cross-workspace data leaks.
+Every user gets one private workspace, created on first sign-in. All queries are
+scoped to the workspace id returned by `getCurrentContext()` — never to a value
+supplied by the client.
 
 ## Roadmap
 
