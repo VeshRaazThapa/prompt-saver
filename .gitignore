@@ -31,6 +31,9 @@ Thumbs.db
 # Next.js
 .cache/
 
+# Vercel
+.vercel/
+
 # Testing
 jest.config.js.bak
 
