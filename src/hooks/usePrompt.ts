@@ -69,6 +69,10 @@ export function usePrompt(promptId?: string) {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
 
     autoSaveTimer.current = setTimeout(async () => {
+      // Reset at the start of the operation, same as the other four operations in this
+      // hook — otherwise a stale error from an earlier failed save (auto-save or manual)
+      // would keep showing next to a later "Saved {time}" once this auto-save succeeds.
+      setError(null);
       const result = await updateDraftAction(prompt.id, {
         title: draft.title,
         description: draft.description,

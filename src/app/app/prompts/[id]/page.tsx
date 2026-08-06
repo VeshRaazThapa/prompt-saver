@@ -79,7 +79,7 @@ export default function EditPromptPage() {
   if (!prompt) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-stone-500">Prompt not found.</p>
+        <p className="text-stone-500">{error ?? 'Prompt not found.'}</p>
         <Link href="/app" className="text-sm text-primary hover:underline">
           Back to library
         </Link>
