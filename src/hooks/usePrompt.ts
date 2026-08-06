@@ -36,6 +36,7 @@ export function usePrompt(promptId?: string) {
 
     const loadPrompt = async () => {
       setLoading(true);
+      setError(null);
       try {
         const result = await getPromptAction(promptId);
         if (result.ok) {
@@ -109,6 +110,7 @@ export function usePrompt(promptId?: string) {
   // that throw-on-failure contract while still guaranteeing `saving` is always cleared.
   const createPrompt = useCallback(async (): Promise<string> => {
     setSaving(true);
+    setError(null);
     try {
       let result: Awaited<ReturnType<typeof createPromptAction>>;
       try {
@@ -142,6 +144,7 @@ export function usePrompt(promptId?: string) {
     async (changeSummary?: string, result?: string) => {
       if (!prompt) return;
       setSaving(true);
+      setError(null);
       try {
         const saved = await saveVersionAction(prompt.id, {
           title: draft.title,
@@ -157,15 +160,22 @@ export function usePrompt(promptId?: string) {
           return;
         }
 
-        // The save itself succeeded even if this refresh fails — clear the unsaved-changes
-        // flag, but tell the user the view may now be stale rather than silently keeping
-        // the old prompt/version-count around under a "Saved" label.
-        const refreshed = await getPromptAction(prompt.id);
-        if (refreshed.ok) {
-          setPrompt(refreshed.data.prompt);
-          setCurrentVersionResult(refreshed.data.currentVersionResult);
-        } else {
-          setError(refreshed.error);
+        // The save itself succeeded even if this refresh fails or throws — clear the
+        // unsaved-changes flag, but tell the user the view may now be stale rather than
+        // silently keeping the old prompt/version-count around under a "Saved" label.
+        // A throw here is handled the same as an {ok:false} result (both just set `error`)
+        // so it doesn't fall through to the outer catch, which would incorrectly leave
+        // `hasUnsavedChanges` set for a save that actually succeeded.
+        try {
+          const refreshed = await getPromptAction(prompt.id);
+          if (refreshed.ok) {
+            setPrompt(refreshed.data.prompt);
+            setCurrentVersionResult(refreshed.data.currentVersionResult);
+          } else {
+            setError(refreshed.error);
+          }
+        } catch {
+          setError('Something went wrong. Please try again.');
         }
         setLastSaved(now());
         setHasUnsavedChanges(false);
@@ -183,6 +193,7 @@ export function usePrompt(promptId?: string) {
     async (result?: string) => {
       if (!prompt) return;
       setSaving(true);
+      setError(null);
       try {
         const saved = await saveCurrentAction(prompt.id, {
           title: draft.title,
@@ -198,13 +209,19 @@ export function usePrompt(promptId?: string) {
         }
 
         // Same reasoning as saveVersion: the save succeeded, so clear unsaved-changes state,
-        // but surface a refresh failure instead of silently showing stale prompt/version data.
-        const refreshed = await getPromptAction(prompt.id);
-        if (refreshed.ok) {
-          setPrompt(refreshed.data.prompt);
-          setCurrentVersionResult(refreshed.data.currentVersionResult);
-        } else {
-          setError(refreshed.error);
+        // but surface a refresh failure (or throw) instead of silently showing stale
+        // prompt/version data. A refresh throw is handled here rather than falling through
+        // to the outer catch, which would incorrectly leave `hasUnsavedChanges` set.
+        try {
+          const refreshed = await getPromptAction(prompt.id);
+          if (refreshed.ok) {
+            setPrompt(refreshed.data.prompt);
+            setCurrentVersionResult(refreshed.data.currentVersionResult);
+          } else {
+            setError(refreshed.error);
+          }
+        } catch {
+          setError('Something went wrong. Please try again.');
         }
         setLastSaved(now());
         setHasUnsavedChanges(false);

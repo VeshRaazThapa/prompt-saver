@@ -18,6 +18,7 @@ export function useVersions(promptId: string) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const result = await listVersionsAction(promptId);
       if (result.ok) {
@@ -50,6 +51,7 @@ export function useVersions(promptId: string) {
 
   const updateResult = useCallback(
     async (versionId: string, result: string) => {
+      setError(null);
       const saved = await updateVersionResultAction(promptId, versionId, result);
       if (!saved.ok) {
         setError(saved.error);
@@ -63,6 +65,7 @@ export function useVersions(promptId: string) {
 
   const restoreVersion = useCallback(
     async (version: PromptVersion) => {
+      setError(null);
       const restored = await restoreVersionAction(promptId, version.id);
       if (!restored.ok) {
         setError(restored.error);

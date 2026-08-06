@@ -57,6 +57,7 @@ export function usePrompts(options: UsePromptsOptions = {}) {
       action: (id: string) => Promise<{ ok: boolean; error?: string }>,
       id: string
     ): Promise<string | null> => {
+      setError(null);
       try {
         const result = await action(id);
         if (!result.ok) {
