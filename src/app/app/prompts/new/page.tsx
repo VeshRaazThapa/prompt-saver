@@ -8,19 +8,36 @@ import { Button } from '@/components/ui/Button';
 
 export default function NewPromptPage() {
   const router = useRouter();
-  const { draft, updateDraft, createPrompt, saving } = usePrompt();
-  const [error, setError] = useState('');
+  const { draft, updateDraft, createPrompt, saving, error: createError } = usePrompt();
+  const [validationError, setValidationError] = useState('');
 
   const handleSave = async () => {
-    if (!draft.title.trim()) { setError('Title is required'); return; }
-    if (!draft.content.trim()) { setError('Content is required'); return; }
-    setError('');
-    const newId = await createPrompt();
-    router.push(`/app/prompts/${newId}`);
+    if (!draft.title.trim()) {
+      setValidationError('Title is required');
+      return;
+    }
+    if (!draft.content.trim()) {
+      setValidationError('Content is required');
+      return;
+    }
+    setValidationError('');
+    try {
+      const newId = await createPrompt();
+      router.push(`/app/prompts/${newId}`);
+    } catch {
+      // createPrompt already set the hook's `error` state on failure — nothing else to do
+      // here, but the catch is required so a rejected creation doesn't become an unhandled
+      // promise rejection with no feedback to the user.
+    }
   };
 
+  const displayError = validationError || createError;
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); handleSave(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      handleSave();
+    }
   };
 
   return (
@@ -28,14 +45,18 @@ export default function NewPromptPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-stone-900">New Prompt</h1>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => router.push('/')}>Cancel</Button>
-          <Button onClick={handleSave} isLoading={saving}>Save Prompt</Button>
+          <Button variant="ghost" onClick={() => router.push('/')}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} isLoading={saving}>
+            Save Prompt
+          </Button>
         </div>
       </div>
 
-      {error && (
+      {displayError && (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {displayError}
         </div>
       )}
 

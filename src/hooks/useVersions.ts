@@ -18,14 +18,19 @@ export function useVersions(promptId: string) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await listVersionsAction(promptId);
-    if (result.ok) {
-      setVersions(result.data);
-      setSelected((prev) => prev ?? result.data[0] ?? null);
-    } else {
-      setError(result.error);
+    try {
+      const result = await listVersionsAction(promptId);
+      if (result.ok) {
+        setVersions(result.data);
+        setSelected((prev) => prev ?? result.data[0] ?? null);
+      } else {
+        setError(result.error);
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [promptId]);
 
   useEffect(() => {

@@ -13,7 +13,13 @@ type SortOption = 'updated_at' | 'created_at' | 'title';
 
 export default function PromptLibraryWrapper() {
   return (
-    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><LoadingSpinner size="lg" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
       <PromptLibrary />
     </Suspense>
   );
@@ -29,18 +35,38 @@ function PromptLibrary() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const { prompts, loading, allTags, toggleFavorite, duplicatePrompt, archivePrompt, deletePrompt } =
-    usePrompts({ searchQuery, filter, sortBy, sortOrder });
+  const {
+    prompts,
+    loading,
+    allTags,
+    toggleFavorite,
+    duplicatePrompt,
+    archivePrompt,
+    deletePrompt,
+  } = usePrompts({ searchQuery, filter, sortBy, sortOrder });
 
-  const filteredPrompts = tagFilter
-    ? prompts.filter((p) => p.tags.includes(tagFilter))
-    : prompts;
+  const filteredPrompts = tagFilter ? prompts.filter((p) => p.tags.includes(tagFilter)) : prompts;
+
+  const closeDeleteModal = () => {
+    setDeleteId(null);
+    setDeleteError(null);
+  };
 
   const handleDelete = async () => {
-    if (deleteId) {
-      await deletePrompt(deleteId);
-      setDeleteId(null);
+    if (!deleteId) return;
+    setDeleting(true);
+    // deletePrompt resolves to the failure message on failure, or null on success — the
+    // hook's shared `error` state can't be read reliably here since this closure was
+    // captured before the mutation resolved, so the return value is the source of truth.
+    const failureMessage = await deletePrompt(deleteId);
+    setDeleting(false);
+    if (failureMessage) {
+      setDeleteError(failureMessage);
+    } else {
+      closeDeleteModal();
     }
   };
 
@@ -62,7 +88,10 @@ function PromptLibrary() {
         {(['all', 'favorites', 'archived'] as FilterType[]).map((f) => (
           <button
             key={f}
-            onClick={() => { setFilter(f); setTagFilter(null); }}
+            onClick={() => {
+              setFilter(f);
+              setTagFilter(null);
+            }}
             className={`min-h-[44px] rounded-full px-4 text-sm font-medium transition-colors duration-150 ${
               filter === f && !tagFilter
                 ? 'bg-primary text-white'
@@ -84,7 +113,10 @@ function PromptLibrary() {
             {(['all', 'favorites', 'archived'] as FilterType[]).map((f) => (
               <button
                 key={f}
-                onClick={() => { setFilter(f); setTagFilter(null); }}
+                onClick={() => {
+                  setFilter(f);
+                  setTagFilter(null);
+                }}
                 className={`block w-full min-h-[44px] rounded-md px-3 text-left text-sm transition-colors duration-150 ${
                   filter === f && !tagFilter
                     ? 'bg-primary-light font-medium text-primary'
@@ -151,13 +183,23 @@ function PromptLibrary() {
           {filteredPrompts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               {/* FINDING-004 fix: warm empty state with icon */}
-              <svg className="mb-4 h-16 w-16 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <svg
+                className="mb-4 h-16 w-16 text-stone-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
               </svg>
               <p className="text-lg text-stone-500">
                 {searchQuery || tagFilter
                   ? 'No prompts match your search.'
-                  : "Your prompt library is empty \u2014 let\u2019s get started."}
+                  : 'Your prompt library is empty \u2014 let\u2019s get started.'}
               </p>
               {!searchQuery && !tagFilter && (
                 <Link
@@ -177,7 +219,10 @@ function PromptLibrary() {
                   onToggleFavorite={toggleFavorite}
                   onDuplicate={duplicatePrompt}
                   onArchive={archivePrompt}
-                  onDelete={(id) => setDeleteId(id)}
+                  onDelete={(id) => {
+                    setDeleteId(id);
+                    setDeleteError(null);
+                  }}
                 />
               ))}
             </div>
@@ -187,11 +232,13 @@ function PromptLibrary() {
 
       <ConfirmModal
         isOpen={deleteId !== null}
-        onClose={() => setDeleteId(null)}
+        onClose={closeDeleteModal}
         onConfirm={handleDelete}
         title="Delete Prompt"
         message="This will permanently delete this prompt and all its versions. This cannot be undone."
         confirmLabel="Delete"
+        isLoading={deleting}
+        error={deleteError}
       />
     </div>
   );

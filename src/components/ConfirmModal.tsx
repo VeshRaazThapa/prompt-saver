@@ -12,6 +12,7 @@ interface ConfirmModalProps {
   confirmLabel?: string;
   variant?: 'danger' | 'primary';
   isLoading?: boolean;
+  error?: string | null;
 }
 
 export function ConfirmModal({
@@ -23,6 +24,7 @@ export function ConfirmModal({
   confirmLabel = 'Confirm',
   variant = 'danger',
   isLoading = false,
+  error = null,
 }: ConfirmModalProps) {
   return (
     <Modal
@@ -42,6 +44,11 @@ export function ConfirmModal({
       }
     >
       <p className="text-sm text-stone-600">{message}</p>
+      {error !== null && (
+        <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
     </Modal>
   );
 }

@@ -30,28 +30,47 @@ export function usePrompts(options: UsePromptsOptions = {}) {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const result = await listPrompts({ searchQuery: debouncedQuery, filter, sortBy, sortOrder });
-    if (result.ok) {
-      setPrompts(result.data.prompts);
-      setAllTags(result.data.allTags);
-    } else {
-      setError(result.error);
+    try {
+      const result = await listPrompts({ searchQuery: debouncedQuery, filter, sortBy, sortOrder });
+      if (result.ok) {
+        setPrompts(result.data.prompts);
+        setAllTags(result.data.allTags);
+      } else {
+        setError(result.error);
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [debouncedQuery, filter, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
   }, [load]);
 
+  // Returns null on success, or the failure message on failure — callers that need to
+  // know whether a specific mutation actually succeeded (e.g. before dismissing a confirm
+  // dialog) can't rely on `error` alone, since it's shared state read from a stale closure.
   const runThenReload = useCallback(
-    async (action: (id: string) => Promise<{ ok: boolean; error?: string }>, id: string) => {
-      const result = await action(id);
-      if (!result.ok) {
-        setError(result.error ?? 'Action failed');
-        return;
+    async (
+      action: (id: string) => Promise<{ ok: boolean; error?: string }>,
+      id: string
+    ): Promise<string | null> => {
+      try {
+        const result = await action(id);
+        if (!result.ok) {
+          const message = result.error ?? 'Action failed';
+          setError(message);
+          return message;
+        }
+        await load();
+        return null;
+      } catch {
+        const message = 'Something went wrong. Please try again.';
+        setError(message);
+        return message;
       }
-      await load();
     },
     [load]
   );

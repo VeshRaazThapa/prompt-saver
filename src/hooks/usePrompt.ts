@@ -36,21 +36,26 @@ export function usePrompt(promptId?: string) {
 
     const loadPrompt = async () => {
       setLoading(true);
-      const result = await getPromptAction(promptId);
-      if (result.ok) {
-        const { prompt: existing, currentVersionResult: loadedResult } = result.data;
-        setPrompt(existing);
-        setDraft({
-          title: existing.title,
-          description: existing.description ?? '',
-          content: existing.content,
-          tags: existing.tags,
-        });
-        setCurrentVersionResult(loadedResult);
-      } else {
-        setError(result.error);
+      try {
+        const result = await getPromptAction(promptId);
+        if (result.ok) {
+          const { prompt: existing, currentVersionResult: loadedResult } = result.data;
+          setPrompt(existing);
+          setDraft({
+            title: existing.title,
+            description: existing.description ?? '',
+            content: existing.content,
+            tags: existing.tags,
+          });
+          setCurrentVersionResult(loadedResult);
+        } else {
+          setError(result.error);
+        }
+      } catch {
+        setError('Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadPrompt();
@@ -99,24 +104,37 @@ export function usePrompt(promptId?: string) {
     setDirty(true);
   }, []);
 
-  // Create new prompt — atomic: prompt + version created server-side in one transaction
+  // Create new prompt — atomic: prompt + version created server-side in one transaction.
+  // Throws on failure (callers await this to get the new id); the inner try/catch keeps
+  // that throw-on-failure contract while still guaranteeing `saving` is always cleared.
   const createPrompt = useCallback(async (): Promise<string> => {
     setSaving(true);
-    const result = await createPromptAction({
-      title: draft.title,
-      description: draft.description,
-      content: draft.content,
-      tags: draft.tags,
-    });
-    setSaving(false);
+    try {
+      let result: Awaited<ReturnType<typeof createPromptAction>>;
+      try {
+        result = await createPromptAction({
+          title: draft.title,
+          description: draft.description,
+          content: draft.content,
+          tags: draft.tags,
+        });
+      } catch {
+        const message = 'Something went wrong. Please try again.';
+        setError(message);
+        throw new Error(message);
+      }
 
-    if (!result.ok) {
-      setError(result.error);
-      throw new Error(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        throw new Error(result.error);
+      }
+
+      setLastSaved(now());
+      setHasUnsavedChanges(false);
+      return result.data.id;
+    } finally {
+      setSaving(false);
     }
-    setLastSaved(now());
-    setHasUnsavedChanges(false);
-    return result.data.id;
   }, [draft]);
 
   // Save new version
@@ -124,29 +142,38 @@ export function usePrompt(promptId?: string) {
     async (changeSummary?: string, result?: string) => {
       if (!prompt) return;
       setSaving(true);
+      try {
+        const saved = await saveVersionAction(prompt.id, {
+          title: draft.title,
+          description: draft.description,
+          content: draft.content,
+          tags: draft.tags,
+          ...(changeSummary !== undefined ? { changeSummary } : {}),
+          ...(result !== undefined ? { result } : {}),
+        });
 
-      const saved = await saveVersionAction(prompt.id, {
-        title: draft.title,
-        description: draft.description,
-        content: draft.content,
-        tags: draft.tags,
-        ...(changeSummary !== undefined ? { changeSummary } : {}),
-        ...(result !== undefined ? { result } : {}),
-      });
-      setSaving(false);
+        if (!saved.ok) {
+          setError(saved.error);
+          return;
+        }
 
-      if (!saved.ok) {
-        setError(saved.error);
-        return;
+        // The save itself succeeded even if this refresh fails — clear the unsaved-changes
+        // flag, but tell the user the view may now be stale rather than silently keeping
+        // the old prompt/version-count around under a "Saved" label.
+        const refreshed = await getPromptAction(prompt.id);
+        if (refreshed.ok) {
+          setPrompt(refreshed.data.prompt);
+          setCurrentVersionResult(refreshed.data.currentVersionResult);
+        } else {
+          setError(refreshed.error);
+        }
+        setLastSaved(now());
+        setHasUnsavedChanges(false);
+      } catch {
+        setError('Something went wrong. Please try again.');
+      } finally {
+        setSaving(false);
       }
-
-      const refreshed = await getPromptAction(prompt.id);
-      if (refreshed.ok) {
-        setPrompt(refreshed.data.prompt);
-        setCurrentVersionResult(refreshed.data.currentVersionResult);
-      }
-      setLastSaved(now());
-      setHasUnsavedChanges(false);
     },
     [draft, prompt]
   );
@@ -156,29 +183,37 @@ export function usePrompt(promptId?: string) {
     async (result?: string) => {
       if (!prompt) return;
       setSaving(true);
+      try {
+        const saved = await saveCurrentAction(prompt.id, {
+          title: draft.title,
+          description: draft.description,
+          content: draft.content,
+          tags: draft.tags,
+          ...(result !== undefined ? { result } : {}),
+        });
 
-      const saved = await saveCurrentAction(prompt.id, {
-        title: draft.title,
-        description: draft.description,
-        content: draft.content,
-        tags: draft.tags,
-        ...(result !== undefined ? { result } : {}),
-      });
-      setSaving(false);
+        if (!saved.ok) {
+          setError(saved.error);
+          return;
+        }
 
-      if (!saved.ok) {
-        setError(saved.error);
-        return;
+        // Same reasoning as saveVersion: the save succeeded, so clear unsaved-changes state,
+        // but surface a refresh failure instead of silently showing stale prompt/version data.
+        const refreshed = await getPromptAction(prompt.id);
+        if (refreshed.ok) {
+          setPrompt(refreshed.data.prompt);
+          setCurrentVersionResult(refreshed.data.currentVersionResult);
+        } else {
+          setError(refreshed.error);
+        }
+        setLastSaved(now());
+        setHasUnsavedChanges(false);
+        setDirty(false);
+      } catch {
+        setError('Something went wrong. Please try again.');
+      } finally {
+        setSaving(false);
       }
-
-      const refreshed = await getPromptAction(prompt.id);
-      if (refreshed.ok) {
-        setPrompt(refreshed.data.prompt);
-        setCurrentVersionResult(refreshed.data.currentVersionResult);
-      }
-      setLastSaved(now());
-      setHasUnsavedChanges(false);
-      setDirty(false);
     },
     [draft, prompt]
   );
