@@ -53,7 +53,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
               />
             </svg>
           </Link>
-          <p className="mt-3 text-[13px] text-stone-400">Free forever. No account required.</p>
+          <p className="mt-3 text-[13px] text-stone-400">Free forever. Sign in with Google.</p>
         </div>
 
         {/* App Preview */}
@@ -337,7 +337,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
             />
           </svg>
         </Link>
-        <p className="mt-3 text-[13px] text-stone-400">Free. No signup. Works in your browser.</p>
+        <p className="mt-3 text-[13px] text-stone-400">Free. Sign in with Google to get started.</p>
       </section>
 
       {/* Footer */}

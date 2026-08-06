@@ -49,16 +49,27 @@ export function useVersions(promptId: string) {
     });
   }, [versions]);
 
+  // Returns null on success, or the failure message on failure — matching
+  // usePrompts's runThenReload convention. Callers that need to know whether
+  // this specific save actually succeeded (e.g. before clearing dirty state)
+  // can't rely on `error` alone, since it's shared state read from a stale closure.
   const updateResult = useCallback(
-    async (versionId: string, result: string) => {
+    async (versionId: string, result: string): Promise<string | null> => {
       setError(null);
-      const saved = await updateVersionResultAction(promptId, versionId, result);
-      if (!saved.ok) {
-        setError(saved.error);
-        return;
+      try {
+        const saved = await updateVersionResultAction(promptId, versionId, result);
+        if (!saved.ok) {
+          setError(saved.error);
+          return saved.error;
+        }
+        setVersions((prev) => prev.map((v) => (v.id === versionId ? { ...v, result } : v)));
+        setSelected((prev) => (prev && prev.id === versionId ? { ...prev, result } : prev));
+        return null;
+      } catch {
+        const message = 'Something went wrong. Please try again.';
+        setError(message);
+        return message;
       }
-      setVersions((prev) => prev.map((v) => (v.id === versionId ? { ...v, result } : v)));
-      setSelected((prev) => (prev && prev.id === versionId ? { ...prev, result } : prev));
     },
     [promptId]
   );
@@ -66,13 +77,17 @@ export function useVersions(promptId: string) {
   const restoreVersion = useCallback(
     async (version: PromptVersion) => {
       setError(null);
-      const restored = await restoreVersionAction(promptId, version.id);
-      if (!restored.ok) {
-        setError(restored.error);
-        return;
+      try {
+        const restored = await restoreVersionAction(promptId, version.id);
+        if (!restored.ok) {
+          setError(restored.error);
+          return;
+        }
+        await load();
+        setSelected(restored.data);
+      } catch {
+        setError('Something went wrong. Please try again.');
       }
-      await load();
-      setSelected(restored.data);
     },
     [promptId, load]
   );

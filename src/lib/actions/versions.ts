@@ -1,37 +1,27 @@
 'use server';
 
-import type { Prompt, PromptVersion } from '@/types';
+import type { PromptVersion } from '@/types';
 import { getCurrentContext } from '../auth/context';
 import { DrizzlePromptRepository } from '../db/drizzle/prompt-repository';
 import { DrizzlePromptVersionRepository } from '../db/drizzle/prompt-version-repository';
 import { NotFoundError } from '../errors';
 import { generateId } from '../utils/id-generator';
+import { requireOwnedPrompt } from './ownership';
 import { run, type ActionResult, type DraftInput } from './result';
 
 const promptRepo = new DrizzlePromptRepository();
 const versionRepo = new DrizzlePromptVersionRepository();
 
 /**
- * Loads a prompt and proves it belongs to the caller's workspace.
- * Throws NotFoundError — never AuthorizationError — so the response cannot be
- * used to probe whether an id exists in someone else's workspace.
- */
-async function requireOwnedPrompt(id: string): Promise<Prompt> {
-  const { workspaceId } = await getCurrentContext();
-  const prompt = await promptRepo.findById(id);
-  if (prompt === null || prompt.workspace_id !== workspaceId) {
-    throw new NotFoundError('Prompt', id);
-  }
-  return prompt;
-}
-
-/**
  * Ownership is proven via the parent prompt, never the version id alone —
  * DrizzlePromptVersionRepository has no workspace scoping of its own, so this
  * chain (prompt ownership, then version-belongs-to-prompt) is the only guard.
+ * The prompt-ownership check itself is the shared `requireOwnedPrompt` so it
+ * can't drift from the one `prompts.ts` uses.
  */
 async function requireOwnedVersion(promptId: string, versionId: string): Promise<PromptVersion> {
-  await requireOwnedPrompt(promptId);
+  const { workspaceId } = await getCurrentContext();
+  await requireOwnedPrompt(promptId, workspaceId);
   const version = await versionRepo.findById(versionId);
   if (version === null || version.prompt_id !== promptId) {
     throw new NotFoundError('PromptVersion', versionId);
@@ -41,7 +31,8 @@ async function requireOwnedVersion(promptId: string, versionId: string): Promise
 
 export async function listVersionsAction(promptId: string): Promise<ActionResult<PromptVersion[]>> {
   return run(async () => {
-    await requireOwnedPrompt(promptId);
+    const { workspaceId } = await getCurrentContext();
+    await requireOwnedPrompt(promptId, workspaceId);
     return versionRepo.findByPromptId(promptId);
   });
 }
@@ -51,7 +42,8 @@ export async function saveVersionAction(
   input: DraftInput & { changeSummary?: string; result?: string }
 ): Promise<ActionResult<PromptVersion>> {
   return run(async () => {
-    await requireOwnedPrompt(promptId);
+    const { workspaceId } = await getCurrentContext();
+    await requireOwnedPrompt(promptId, workspaceId);
 
     const version = await versionRepo.createVersionAtomic(
       {
@@ -82,7 +74,8 @@ export async function saveCurrentAction(
   input: DraftInput & { result?: string }
 ): Promise<ActionResult<null>> {
   return run(async () => {
-    const prompt = await requireOwnedPrompt(promptId);
+    const { workspaceId } = await getCurrentContext();
+    const prompt = await requireOwnedPrompt(promptId, workspaceId);
 
     await promptRepo.update(promptId, {
       title: input.title,

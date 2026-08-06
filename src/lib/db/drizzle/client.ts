@@ -18,7 +18,11 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
     // `prepare: false` is REQUIRED behind Neon's transaction-mode pooler.
     // Serverless default is a single connection per invocation; tests raise this
     // so concurrent-transaction behavior can actually be exercised.
-    const poolMax = Number(process.env['DB_POOL_MAX'] ?? '1');
+    // Validated rather than `?? '1'`: `??` only catches null/undefined, so
+    // DB_POOL_MAX='' would coerce to 0 (a zero-connection pool that hangs every
+    // request with no diagnosable error), and non-numeric input would coerce to NaN.
+    const parsedPoolMax = Number(process.env['DB_POOL_MAX']);
+    const poolMax = Number.isInteger(parsedPoolMax) && parsedPoolMax > 0 ? parsedPoolMax : 1;
     client = postgres(url, { max: poolMax, prepare: false });
     db = drizzle(client, { schema });
   }

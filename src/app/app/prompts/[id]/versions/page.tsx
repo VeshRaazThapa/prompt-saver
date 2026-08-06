@@ -16,6 +16,7 @@ export default function VersionHistoryPage() {
   const {
     versions,
     loading,
+    error,
     selected,
     setSelected,
     compareWith,
@@ -41,9 +42,14 @@ export default function VersionHistoryPage() {
   const handleResultSave = async () => {
     if (!selected) return;
     setResultSaving(true);
-    await updateResult(selected.id, resultDraft);
+    // updateResult resolves to the failure message on failure, or null on success — only
+    // clear the dirty flag on genuine success, otherwise the user's typed result would be
+    // discarded and the editor would revert to the old value with no error shown.
+    const failureMessage = await updateResult(selected.id, resultDraft);
     setResultSaving(false);
-    setResultDirty(false);
+    if (!failureMessage) {
+      setResultDirty(false);
+    }
   };
 
   if (loading) {
@@ -56,8 +62,14 @@ export default function VersionHistoryPage() {
 
   if (versions.length === 0) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-stone-500">No versions yet.</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        {error ? (
+          <div className="max-w-md rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        ) : (
+          <p className="text-stone-500">No versions yet.</p>
+        )}
         <Link href={`/app/prompts/${id}`} className="text-sm text-primary hover:underline">
           Back to editor
         </Link>
@@ -94,6 +106,12 @@ export default function VersionHistoryPage() {
           )}
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="flex gap-6">
         <aside className="w-64 shrink-0">

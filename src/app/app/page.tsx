@@ -41,6 +41,7 @@ function PromptLibrary() {
   const {
     prompts,
     loading,
+    error,
     allTags,
     toggleFavorite,
     duplicatePrompt,
@@ -82,6 +83,12 @@ function PromptLibrary() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       {/* Page heading (visually subtle but semantically correct) */}
       <h1 className="sr-only">Prompt Library</h1>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Mobile filter pills (FINDING-003 fix: visible on small screens) */}
       <div className="mb-4 flex flex-wrap gap-2 lg:hidden">
@@ -197,11 +204,13 @@ function PromptLibrary() {
                 />
               </svg>
               <p className="text-lg text-stone-500">
-                {searchQuery || tagFilter
-                  ? 'No prompts match your search.'
-                  : 'Your prompt library is empty \u2014 let\u2019s get started.'}
+                {error
+                  ? "We couldn't load your prompts. Please try again."
+                  : searchQuery || tagFilter
+                    ? 'No prompts match your search.'
+                    : 'Your prompt library is empty \u2014 let\u2019s get started.'}
               </p>
-              {!searchQuery && !tagFilter && (
+              {error === null && !searchQuery && !tagFilter && (
                 <Link
                   href="/app/prompts/new"
                   className="mt-4 inline-flex min-h-[44px] items-center rounded-md bg-primary px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-primary-hover"

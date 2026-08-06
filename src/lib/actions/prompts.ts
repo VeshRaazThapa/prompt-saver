@@ -4,9 +4,9 @@ import type { Prompt } from '@/types';
 import { getCurrentContext } from '../auth/context';
 import { DrizzlePromptRepository } from '../db/drizzle/prompt-repository';
 import { DrizzlePromptVersionRepository } from '../db/drizzle/prompt-version-repository';
-import { NotFoundError } from '../errors';
 import { generateId } from '../utils/id-generator';
 import { now } from '../utils/datetime';
+import { requireOwnedPrompt } from './ownership';
 import {
   run,
   type ActionResult,
@@ -17,19 +17,6 @@ import {
 
 const promptRepo = new DrizzlePromptRepository();
 const versionRepo = new DrizzlePromptVersionRepository();
-
-/**
- * Loads a prompt and proves it belongs to the caller's workspace.
- * Throws NotFoundError — never AuthorizationError — so the response cannot be
- * used to probe whether an id exists in someone else's workspace.
- */
-async function requireOwnedPrompt(id: string, workspaceId: string): Promise<Prompt> {
-  const prompt = await promptRepo.findById(id);
-  if (prompt === null || prompt.workspace_id !== workspaceId) {
-    throw new NotFoundError('Prompt', id);
-  }
-  return prompt;
-}
 
 export async function listPrompts(
   input: ListPromptsInput

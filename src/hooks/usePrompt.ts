@@ -73,17 +73,21 @@ export function usePrompt(promptId?: string) {
       // hook — otherwise a stale error from an earlier failed save (auto-save or manual)
       // would keep showing next to a later "Saved {time}" once this auto-save succeeds.
       setError(null);
-      const result = await updateDraftAction(prompt.id, {
-        title: draft.title,
-        description: draft.description,
-        content: draft.content,
-        tags: draft.tags,
-      });
-      if (result.ok) {
-        setLastSaved(now());
-        setHasUnsavedChanges(false);
-      } else {
-        setError(result.error);
+      try {
+        const result = await updateDraftAction(prompt.id, {
+          title: draft.title,
+          description: draft.description,
+          content: draft.content,
+          tags: draft.tags,
+        });
+        if (result.ok) {
+          setLastSaved(now());
+          setHasUnsavedChanges(false);
+        } else {
+          setError(result.error);
+        }
+      } catch {
+        setError('Something went wrong. Please try again.');
       }
     }, 1500);
 
