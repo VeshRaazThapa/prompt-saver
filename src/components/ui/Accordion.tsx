@@ -30,7 +30,9 @@ export function Accordion({ title, defaultOpen = true, badge, children }: Accord
           </svg>
           <span className="text-sm font-medium text-stone-900">{title}</span>
           {badge && (
-            <span className="rounded px-1.5 py-0.5 text-xs font-medium bg-stone-100 text-stone-500">{badge}</span>
+            <span className="rounded px-1.5 py-0.5 text-xs font-medium bg-stone-100 text-stone-500">
+              {badge}
+            </span>
           )}
         </div>
       </button>

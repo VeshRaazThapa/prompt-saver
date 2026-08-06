@@ -15,7 +15,14 @@ interface ResultEditorProps {
   noBorder?: boolean;
 }
 
-export function ResultEditor({ value, onChange, onSave, saving = false, readOnly = false, noBorder = false }: ResultEditorProps) {
+export function ResultEditor({
+  value,
+  onChange,
+  onSave,
+  saving = false,
+  readOnly = false,
+  noBorder = false,
+}: ResultEditorProps) {
   const [tab, setTab] = useState<Tab>(value && readOnly ? 'preview' : 'edit');
 
   return (
@@ -23,7 +30,11 @@ export function ResultEditor({ value, onChange, onSave, saving = false, readOnly
       {/* Tab bar */}
       <div className="flex items-center justify-between border-b border-stone-100 px-4 py-2">
         <div className="flex items-center gap-1">
-          {!noBorder && <span className="mr-2 text-xs font-medium uppercase tracking-wide text-stone-400">LLM Result</span>}
+          {!noBorder && (
+            <span className="mr-2 text-xs font-medium uppercase tracking-wide text-stone-400">
+              LLM Result
+            </span>
+          )}
           <button
             onClick={() => setTab('edit')}
             className={`min-h-[32px] rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${

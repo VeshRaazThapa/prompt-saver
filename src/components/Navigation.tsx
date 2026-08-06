@@ -48,9 +48,7 @@ export function Navigation() {
                     className="rounded-full"
                   />
                 )}
-                <span className="hidden text-sm text-stone-600 sm:inline">
-                  {session.user.name}
-                </span>
+                <span className="hidden text-sm text-stone-600 sm:inline">{session.user.name}</span>
                 <button
                   onClick={() => signOut({ callbackUrl: '/app' })}
                   className="min-h-[44px] px-2 text-sm text-stone-500 transition-colors duration-150 hover:text-stone-700"

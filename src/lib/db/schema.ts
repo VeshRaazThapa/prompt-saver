@@ -40,14 +40,26 @@ export function upgradeSchema(db: IDBDatabase, oldVersion: number): void {
     // Prompts store
     const promptsStore = db.createObjectStore(STORES.PROMPTS, { keyPath: 'id' });
     promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_ID, 'workspace_id', { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_CREATED, ['workspace_id', 'created_at'], { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_FAVORITE, ['workspace_id', 'is_favorite', 'updated_at'], { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_TITLE, ['workspace_id', 'title'], { unique: false });
+    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_CREATED, ['workspace_id', 'created_at'], {
+      unique: false,
+    });
+    promptsStore.createIndex(
+      INDEXES.PROMPTS.WORKSPACE_FAVORITE,
+      ['workspace_id', 'is_favorite', 'updated_at'],
+      { unique: false }
+    );
+    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_TITLE, ['workspace_id', 'title'], {
+      unique: false,
+    });
 
     // Prompt versions store
     const versionsStore = db.createObjectStore(STORES.PROMPT_VERSIONS, { keyPath: 'id' });
     versionsStore.createIndex(INDEXES.PROMPT_VERSIONS.PROMPT_ID, 'prompt_id', { unique: false });
-    versionsStore.createIndex(INDEXES.PROMPT_VERSIONS.PROMPT_VERSION, ['prompt_id', 'version_number'], { unique: true });
+    versionsStore.createIndex(
+      INDEXES.PROMPT_VERSIONS.PROMPT_VERSION,
+      ['prompt_id', 'version_number'],
+      { unique: true }
+    );
   }
 
   // V1 -> V2: Clean wipe for internal MVP — type shapes changed, no prod data to migrate
@@ -70,12 +82,24 @@ export function upgradeSchema(db: IDBDatabase, oldVersion: number): void {
 
     const promptsStore = db.createObjectStore(STORES.PROMPTS, { keyPath: 'id' });
     promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_ID, 'workspace_id', { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_CREATED, ['workspace_id', 'created_at'], { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_FAVORITE, ['workspace_id', 'is_favorite', 'updated_at'], { unique: false });
-    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_TITLE, ['workspace_id', 'title'], { unique: false });
+    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_CREATED, ['workspace_id', 'created_at'], {
+      unique: false,
+    });
+    promptsStore.createIndex(
+      INDEXES.PROMPTS.WORKSPACE_FAVORITE,
+      ['workspace_id', 'is_favorite', 'updated_at'],
+      { unique: false }
+    );
+    promptsStore.createIndex(INDEXES.PROMPTS.WORKSPACE_TITLE, ['workspace_id', 'title'], {
+      unique: false,
+    });
 
     const versionsStore = db.createObjectStore(STORES.PROMPT_VERSIONS, { keyPath: 'id' });
     versionsStore.createIndex(INDEXES.PROMPT_VERSIONS.PROMPT_ID, 'prompt_id', { unique: false });
-    versionsStore.createIndex(INDEXES.PROMPT_VERSIONS.PROMPT_VERSION, ['prompt_id', 'version_number'], { unique: true });
+    versionsStore.createIndex(
+      INDEXES.PROMPT_VERSIONS.PROMPT_VERSION,
+      ['prompt_id', 'version_number'],
+      { unique: true }
+    );
   }
 }

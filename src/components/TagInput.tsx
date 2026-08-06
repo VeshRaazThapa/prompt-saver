@@ -69,7 +69,10 @@ export function TagInput({
           ref={inputRef}
           type="text"
           value={input}
-          onChange={(e) => { setInput(e.target.value); setShowSuggestions(true); }}
+          onChange={(e) => {
+            setInput(e.target.value);
+            setShowSuggestions(true);
+          }}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}

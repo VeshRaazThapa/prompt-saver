@@ -10,7 +10,13 @@ interface DiffViewerProps {
   noBorder?: boolean;
 }
 
-export function DiffViewer({ oldText, newText, oldLabel, newLabel, noBorder = false }: DiffViewerProps) {
+export function DiffViewer({
+  oldText,
+  newText,
+  oldLabel,
+  newLabel,
+  noBorder = false,
+}: DiffViewerProps) {
   const lines = computeDiff(oldText, newText);
 
   if (oldText === newText) {
@@ -18,7 +24,9 @@ export function DiffViewer({ oldText, newText, oldLabel, newLabel, noBorder = fa
   }
 
   return (
-    <div className={noBorder ? 'overflow-auto' : 'overflow-auto rounded-lg border border-stone-200'}>
+    <div
+      className={noBorder ? 'overflow-auto' : 'overflow-auto rounded-lg border border-stone-200'}
+    >
       {(oldLabel || newLabel) && (
         <div className="flex border-b border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-500">
           {oldLabel && <span className="text-red-600">{oldLabel}</span>}

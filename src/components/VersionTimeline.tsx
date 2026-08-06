@@ -50,14 +50,14 @@ export function VersionTimeline({
               </span>
             </div>
             {version.change_summary && (
-              <p className="mt-0.5 text-xs text-stone-500 line-clamp-1">
-                {version.change_summary}
-              </p>
+              <p className="mt-0.5 text-xs text-stone-500 line-clamp-1">{version.change_summary}</p>
             )}
             {(isSelected || isCompare) && (
-              <span className={`mt-1 inline-block rounded px-1 text-xs ${
-                isSelected ? 'bg-primary-light text-primary' : 'bg-amber-100 text-amber-700'
-              }`}>
+              <span
+                className={`mt-1 inline-block rounded px-1 text-xs ${
+                  isSelected ? 'bg-primary-light text-primary' : 'bg-amber-100 text-amber-700'
+                }`}
+              >
                 {isSelected ? 'viewing' : 'comparing'}
               </span>
             )}

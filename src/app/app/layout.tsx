@@ -3,11 +3,7 @@ import { Navigation } from '@/components/Navigation';
 import { Providers } from '@/components/Providers';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.ReactElement {
+export default function AppLayout({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <ErrorBoundary>
       <Providers>
