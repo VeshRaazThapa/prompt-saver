@@ -34,16 +34,22 @@ async function copyToClipboard(text: string): Promise<boolean> {
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
+  // Reset "Copied" through an effect (not a bare setTimeout in the click handler) so the
+  // timer is cleared on unmount — clicking Copy then dismissing the reveal within the
+  // 2s window must not call setState on an unmounted component.
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   const handleClick = useCallback(async () => {
     const ok = await copyToClipboard(text);
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    if (ok) setCopied(true);
   }, [text]);
 
   return (
-    <Button type="button" variant="secondary" size="sm" onClick={handleClick}>
+    <Button type="button" variant="secondary" onClick={handleClick}>
       {copied ? 'Copied' : label}
     </Button>
   );
@@ -74,7 +80,7 @@ function NewTokenReveal({ token, onDismiss }: { token: string; onDismiss: () => 
       </div>
 
       <div className="mt-4 flex justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={onDismiss}>
+        <Button type="button" variant="ghost" onClick={onDismiss}>
           Done
         </Button>
       </div>
@@ -132,7 +138,7 @@ function TokensTable({
                   <button
                     type="button"
                     onClick={() => onRevoke(t.id)}
-                    className="min-h-[36px] rounded-md px-2 text-sm font-medium text-error transition-colors duration-150 ease-out hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="min-h-[44px] rounded-md px-3 text-sm font-medium text-error transition-colors duration-150 ease-out hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     Revoke
                   </button>
@@ -198,20 +204,32 @@ export default function TokensPage() {
   const closeRevokeModal = useCallback(() => {
     setRevokeId(null);
     setRevokeError(null);
+    // Guards against a stale spinner surviving a close-and-reopen on a different token —
+    // see the try/catch below for why `revoking` can otherwise get stuck at `true`.
+    setRevoking(false);
   }, []);
 
   const handleRevoke = useCallback(async () => {
     if (revokeId === null) return;
     setRevoking(true);
     setRevokeError(null);
-    const result = await revokeTokenAction(revokeId);
-    setRevoking(false);
-    if (!result.ok) {
-      setRevokeError(result.error);
-      return;
+    // A transport-level rejection (network drop, aborted fetch) is distinct from the
+    // action resolving with { ok: false } and must still clear `revoking` — otherwise
+    // ConfirmModal's confirm button (isLoading={revoking} -> disabled) stays stuck
+    // permanently, on the one page whose job is turning off a leaked credential.
+    try {
+      const result = await revokeTokenAction(revokeId);
+      if (!result.ok) {
+        setRevokeError(result.error);
+        return;
+      }
+      setRevokeId(null);
+      await load();
+    } catch {
+      setRevokeError('Something went wrong. Please try again.');
+    } finally {
+      setRevoking(false);
     }
-    setRevokeId(null);
-    await load();
   }, [revokeId, load]);
 
   return (
