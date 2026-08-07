@@ -20,16 +20,19 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
     "@tailwindcss/typography": "^0.5.19",
     "diff": "^8.0.3",
     "drizzle-orm": "^0.45.2",
+    "mcp-handler": "^2.1.0",
     "next": "^16.0.0",
     "next-auth": "^4.24.0",
     "postgres": "^3.4.9",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -58,6 +61,6 @@
     "typescript-eslint": "^8.54.0"
   },
   "engines": {
-    "node": "^18.17 || ^20"
+    "node": "^20 || ^22 || ^24"
   }
 }
