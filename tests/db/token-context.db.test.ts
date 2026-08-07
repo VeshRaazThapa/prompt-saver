@@ -3,7 +3,7 @@
  */
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle/client';
-import { apiTokens } from '@/lib/db/drizzle/schema';
+import { apiTokens, workspaces } from '@/lib/db/drizzle/schema';
 import { createToken, revokeToken, listTokens } from '@/lib/tokens/repository';
 import { resolveTokenContext } from '@/lib/auth/token-context';
 import { resetDb, seedUser, closeDb } from './helpers';
@@ -32,11 +32,26 @@ describe('resolveTokenContext', () => {
   });
 
   // THE ISOLATION GUARD — a token must never resolve to another user's workspace.
+  //
+  // The fixture seeds user A before user B, so user A's workspace is the
+  // globally oldest by default — which would let a broken lookup that drops
+  // the userId filter (and just takes the oldest workspace overall) still
+  // land on the right answer by coincidence. To make this assertion actually
+  // depend on resolveTokenContext filtering by userId, we force user B's
+  // workspace to be OLDER than user A's here. Now "oldest workspace overall"
+  // is the WRONG (user B's) answer, so only a correctly-scoped lookup passes.
   it('never resolves one user token to another user workspace', async () => {
+    await getDb()
+      .update(workspaces)
+      .set({ createdAt: new Date('2000-01-01T00:00:00Z') })
+      .where(eq(workspaces.id, userB.workspaceId));
+
     const { token } = await createToken(userA.userId, 'laptop');
     const ctx = await resolveTokenContext(token);
 
+    expect(ctx?.workspaceId).toBe(userA.workspaceId);
     expect(ctx?.workspaceId).not.toBe(userB.workspaceId);
+    expect(ctx?.userId).toBe(userA.userId);
     expect(ctx?.userId).not.toBe(userB.userId);
   });
 
