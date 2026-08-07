@@ -118,7 +118,14 @@ export async function updatePromptHandler(
   return repo.update(id, input);
 }
 
-/** Reuses createVersionAtomic — row-locked, version number recomputed server-side. */
+/**
+ * Reuses createVersionAtomic — row-locked, version number recomputed
+ * server-side — then writes the new content onto prompts.content, mirroring
+ * saveVersionAction (src/lib/actions/versions.ts). createVersionAtomic only
+ * touches current_version_id / version_count / updated_at; without this
+ * second write prompts.content stays on the old body and get_prompt, the web
+ * editor, and favourite slash commands all keep serving stale text.
+ */
 export async function saveVersionHandler(
   workspaceId: string,
   id: string,
@@ -126,7 +133,7 @@ export async function saveVersionHandler(
   changeSummary?: string
 ): Promise<PromptVersion> {
   await requireOwnedPrompt(id, workspaceId);
-  return versionRepo.createVersionAtomic(
+  const version = await versionRepo.createVersionAtomic(
     {
       id: generateId(),
       prompt_id: id,
@@ -137,4 +144,8 @@ export async function saveVersionHandler(
     },
     id
   );
+
+  await repo.update(id, { content });
+
+  return version;
 }

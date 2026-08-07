@@ -4,6 +4,8 @@ import type { AuthInfo } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { resolveTokenContext } from '@/lib/auth/token-context';
 import type { UserContext } from '@/lib/auth/context';
+import { AppError } from '@/lib/errors';
+import { logger } from '@/lib/logging';
 import {
   searchPromptsHandler,
   getPromptHandler,
@@ -11,9 +13,39 @@ import {
   updatePromptHandler,
   saveVersionHandler,
   DEFAULT_SEARCH_LIMIT,
-  MAX_SEARCH_LIMIT,
 } from '@/lib/mcp/tools';
 import { favouritePromptsFor, slugify, buildPromptBody } from '@/lib/mcp/prompts';
+
+const GENERIC_TOOL_ERROR = 'Something went wrong. Please try again.';
+
+/**
+ * Wraps a tool handler body so a thrown error reaches the MCP client
+ * sanitized — the MCP-path equivalent of the Server Action layer's `run()`
+ * (src/lib/actions/result.ts). The SDK catches whatever a tool callback
+ * throws and puts `error.message` into the tool result verbatim, so without
+ * this wrapper a raw driver/DB error (a connection failure, a constraint
+ * violation) reaches the model as literal, uninterpretable text — and leaks
+ * infrastructure detail. AppError subclasses (NotFoundError, ValidationError,
+ * ...) carry messages written for the caller, so those pass through
+ * unchanged; everything else is logged server-side, with the original
+ * message, and replaced with a fixed generic string.
+ */
+function withSafeErrors<Args extends unknown[], TResult>(
+  fn: (...args: Args) => Promise<TResult>
+): (...args: Args) => Promise<TResult> {
+  return async (...args: Args) => {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('MCP tool handler failed', err);
+      throw new Error(GENERIC_TOOL_ERROR);
+    }
+  };
+}
 
 // AsyncLocalStorage and the postgres driver both need the Node runtime.
 export const runtime = 'nodejs';
@@ -63,17 +95,22 @@ const handler = createMcpHandler(async (server) => {
         'Search your saved prompt library by title, description, content or tag. Returns summaries only — call get_prompt for a full body.',
       inputSchema: z.object({
         query: z.string().describe('Search text. Pass an empty string to list recent prompts.'),
-        limit: z.number().int().min(1).max(MAX_SEARCH_LIMIT).optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe('Max results. Defaults to 20, maximum 50.'),
       }),
     },
-    async ({ query, limit }, ctx) => {
+    withSafeErrors(async ({ query, limit }, ctx) => {
       const results = await searchPromptsHandler(
         workspaceFrom(ctx),
         query,
         limit ?? DEFAULT_SEARCH_LIMIT
       );
       return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
-    }
+    })
   );
 
   server.registerTool(
@@ -83,10 +120,10 @@ const handler = createMcpHandler(async (server) => {
       description: 'Fetch the full text of one saved prompt by its id.',
       inputSchema: z.object({ id: z.string() }),
     },
-    async ({ id }, ctx) => {
+    withSafeErrors(async ({ id }, ctx) => {
       const prompt = await getPromptHandler(workspaceFrom(ctx), id);
       return { content: [{ type: 'text', text: prompt.content }] };
-    }
+    })
   );
 
   server.registerTool(
@@ -101,10 +138,10 @@ const handler = createMcpHandler(async (server) => {
         tags: z.array(z.string()).optional(),
       }),
     },
-    async (input, ctx) => {
+    withSafeErrors(async (input, ctx) => {
       const { id } = await createPromptHandler(workspaceFrom(ctx), input);
       return { content: [{ type: 'text', text: `Created prompt ${id}` }] };
-    }
+    })
   );
 
   server.registerTool(
@@ -120,10 +157,10 @@ const handler = createMcpHandler(async (server) => {
         tags: z.array(z.string()).optional(),
       }),
     },
-    async ({ id, ...rest }, ctx) => {
+    withSafeErrors(async ({ id, ...rest }, ctx) => {
       const updated = await updatePromptHandler(workspaceFrom(ctx), id, rest);
       return { content: [{ type: 'text', text: `Updated "${updated.title}"` }] };
-    }
+    })
   );
 
   server.registerTool(
@@ -137,48 +174,55 @@ const handler = createMcpHandler(async (server) => {
         change_summary: z.string().optional(),
       }),
     },
-    async ({ id, content, change_summary }, ctx) => {
+    withSafeErrors(async ({ id, content, change_summary }, ctx) => {
       const v = await saveVersionHandler(workspaceFrom(ctx), id, content, change_summary);
       return { content: [{ type: 'text', text: `Saved version ${v.version_number}` }] };
-    }
+    })
   );
 
   const ctx = contextStore.getStore();
   if (ctx !== undefined) {
-    // A transient failure here (e.g. a DB hiccup) must not take down
-    // search_prompts / get_prompt registration above, which already
-    // succeeded — degrade to zero slash commands for this session instead
-    // of a 500 for the whole connection.
-    let favourites: Awaited<ReturnType<typeof favouritePromptsFor>> = [];
+    // A transient failure here (e.g. a DB hiccup), or a throw from
+    // registerPrompt itself, must not take down search_prompts / get_prompt
+    // registration above, which already succeeded — degrade to zero slash
+    // commands for this session instead of a 500 for the whole connection.
+    // The try/catch spans the registration loop as well as the fetch:
+    // slugify only disambiguates a base-name collision against the bases
+    // seen so far, so a suffixed slug can still coincide with another
+    // prompt's plain slug (e.g. "Foo Bar" -> "foo-bar", and a later prompt
+    // literally titled "foo bar <id6>" collides with the suffix minted for
+    // a second "Foo Bar"). registerPrompt throws on a duplicate name, which
+    // would otherwise escape the factory and 500 the entire connection,
+    // tools included.
     try {
-      favourites = await favouritePromptsFor(ctx.workspaceId);
+      const favourites = await favouritePromptsFor(ctx.workspaceId);
+      const taken = new Set<string>();
+      for (const prompt of favourites) {
+        const name = slugify(prompt.title, prompt.id, taken);
+        if (taken.has(name)) continue;
+        taken.add(name);
+
+        server.registerPrompt(
+          name,
+          {
+            title: prompt.title,
+            description: prompt.description ?? `Saved prompt: ${prompt.title}`,
+            argsSchema: z.object({
+              context: z.string().optional().describe('Extra context appended to the prompt'),
+            }),
+          },
+          ({ context }) => ({
+            messages: [
+              {
+                role: 'user' as const,
+                content: { type: 'text' as const, text: buildPromptBody(prompt, context) },
+              },
+            ],
+          })
+        );
+      }
     } catch (error) {
-      console.error('Failed to load favourite prompts for MCP registration:', error);
-    }
-
-    const taken = new Set<string>();
-    for (const prompt of favourites) {
-      const name = slugify(prompt.title, prompt.id, taken);
-      taken.add(name);
-
-      server.registerPrompt(
-        name,
-        {
-          title: prompt.title,
-          description: prompt.description ?? `Saved prompt: ${prompt.title}`,
-          argsSchema: z.object({
-            context: z.string().optional().describe('Extra context appended to the prompt'),
-          }),
-        },
-        ({ context }) => ({
-          messages: [
-            {
-              role: 'user' as const,
-              content: { type: 'text' as const, text: buildPromptBody(prompt, context) },
-            },
-          ],
-        })
-      );
+      console.error('Failed to register favourite prompts as MCP slash commands:', error);
     }
   }
 });

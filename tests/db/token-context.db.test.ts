@@ -118,4 +118,34 @@ describe('resolveTokenContext', () => {
     expect(await revokeToken(b.id, userA.userId)).toBe(false);
     expect(await resolveTokenContext(b.token)).not.toBeNull();
   });
+
+  // The token door must converge with the browser door: ALLOWED_EMAILS gates
+  // NextAuth sign-in via the signIn callback, but resolveTokenContext used to
+  // never consult it at all, so a token minted before someone was removed
+  // from the allowlist kept full access indefinitely.
+  describe('ALLOWED_EMAILS', () => {
+    const original = process.env['ALLOWED_EMAILS'];
+    afterEach(() => {
+      if (original === undefined) delete process.env['ALLOWED_EMAILS'];
+      else process.env['ALLOWED_EMAILS'] = original;
+    });
+
+    it('resolves a token when the allowlist is unset (the public switch)', async () => {
+      delete process.env['ALLOWED_EMAILS'];
+      const { token } = await createToken(userA.userId, 'laptop');
+      expect(await resolveTokenContext(token)).not.toBeNull();
+    });
+
+    it('rejects a token for an email removed from a populated allowlist', async () => {
+      const { token } = await createToken(userA.userId, 'laptop');
+      // userA is a@example.com — leave them off the allowlist entirely, as
+      // if they'd just been removed.
+      process.env['ALLOWED_EMAILS'] = 'someone-else@example.com';
+
+      // Same null as any other failure mode — unknown, malformed, revoked —
+      // so a response can't be used to tell "removed from allowlist" apart
+      // from "token never existed".
+      expect(await resolveTokenContext(token)).toBeNull();
+    });
+  });
 });

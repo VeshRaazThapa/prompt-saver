@@ -52,7 +52,12 @@ describe('mcp write tools', () => {
     const v = await saveVersionHandler(a.workspaceId, id, 'v2', 'second pass');
 
     expect(v.version_number).toBe(2);
-    expect((await getPromptHandler(a.workspaceId, id)).metadata.version_count).toBe(2);
+    const p = await getPromptHandler(a.workspaceId, id);
+    expect(p.metadata.version_count).toBe(2);
+    // save_version must also write prompts.content — otherwise get_prompt,
+    // the web editor, and favourite slash commands all keep serving the
+    // stale body even though the version row and current_version_id moved on.
+    expect(p.content).toBe('v2');
   });
 
   // THE ISOLATION GUARDS.

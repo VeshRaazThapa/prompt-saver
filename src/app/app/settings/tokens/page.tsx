@@ -7,10 +7,19 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
-const MCP_URL = 'https://prompt-saver-two.vercel.app/api/mcp';
+/**
+ * Reads window.location.origin at call time (never module scope, which would
+ * evaluate during SSR where `window` doesn't exist) so the command shown on
+ * a preview deployment or localhost points at itself instead of always
+ * production. Only ever called from client-triggered render paths (after a
+ * token is created), so `window` is guaranteed to exist here.
+ */
+function mcpUrl(): string {
+  return `${window.location.origin}/api/mcp`;
+}
 
 function mcpCommandFor(token: string): string {
-  return `claude mcp add --transport http prompt-saver --scope user \\\n  ${MCP_URL} \\\n  --header "Authorization: Bearer ${token}"`;
+  return `claude mcp add --transport http prompt-saver --scope user \\\n  ${mcpUrl()} \\\n  --header "Authorization: Bearer ${token}"`;
 }
 
 function formatDate(iso: string): string {

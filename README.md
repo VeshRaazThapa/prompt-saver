@@ -19,10 +19,10 @@ without leaving the terminal.
 
 ### Connect
 
-1. Sign in at https://prompt-saver-two.vercel.app/, then generate a token by
-   going to `/app/settings/tokens`. The raw token is shown exactly once —
-   copy it immediately. Only its SHA-256 hash is stored, so a lost token
-   can't be recovered; revoke it on the same page and create a new one.
+1. Sign in at https://prompt-saver-two.vercel.app/, then click **Settings**
+   and generate a token. The raw token is shown exactly once — copy it
+   immediately. Only its SHA-256 hash is stored, so a lost token can't be
+   recovered; revoke it on the same page and create a new one.
 2. The tokens page shows the registration command with your token filled in.
    It looks like:
 

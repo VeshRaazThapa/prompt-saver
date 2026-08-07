@@ -1,7 +1,8 @@
 import { asc, eq } from 'drizzle-orm';
 import { getDb } from '../db/drizzle/client';
-import { apiTokens, workspaces } from '../db/drizzle/schema';
+import { apiTokens, users, workspaces } from '../db/drizzle/schema';
 import { hashToken } from '../tokens/generate';
+import { isEmailAllowed } from './allowlist';
 import type { UserContext } from './context';
 
 const LAST_USED_THROTTLE_MS = 60 * 60 * 1000;
@@ -30,6 +31,21 @@ export async function resolveTokenContext(token: string): Promise<UserContext | 
 
   const row = rows[0];
   if (row === undefined || row.revokedAt !== null) {
+    return null;
+  }
+
+  // Mirrors the browser door's gate (NextAuth's signIn callback): a token
+  // minted before someone was removed from ALLOWED_EMAILS must stop working
+  // too, not keep full read/write access indefinitely. An unset or blank
+  // allowlist means everyone is allowed — isEmailAllowed already encodes
+  // that — so this never starts rejecting tokens on its own.
+  const userRows = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, row.userId))
+    .limit(1);
+
+  if (!isEmailAllowed(userRows[0]?.email)) {
     return null;
   }
 
