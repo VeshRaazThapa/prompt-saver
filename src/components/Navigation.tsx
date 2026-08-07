@@ -39,6 +39,12 @@ export function Navigation() {
 
             {session?.user ? (
               <div className="flex items-center gap-2">
+                <Link
+                  href="/app/settings/tokens"
+                  className="min-h-[44px] inline-flex items-center px-2 text-sm text-stone-500 transition-colors duration-150 ease-out hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  Settings
+                </Link>
                 {session.user.image && (
                   <Image
                     src={session.user.image}
