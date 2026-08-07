@@ -11,6 +11,71 @@ A prompt management tool for saving, versioning, and searching LLM prompts. Buil
 - **Prompt Library**: Full-text search and intelligent categorization of prompts
 - **Workspace-Based Organization**: Organize prompts within dedicated workspaces
 
+## MCP Server (Claude Code Integration)
+
+Prompt Saver runs a remote [MCP](https://modelcontextprotocol.io) server at
+`/api/mcp`, so a Claude Code session can search, read, and save your prompts
+without leaving the terminal.
+
+### Connect
+
+1. Sign in at https://prompt-saver-two.vercel.app/, then generate a token at
+   **Settings → API Tokens** (`/app/settings/tokens`). The raw token is shown
+   exactly once — copy it immediately. Only its SHA-256 hash is stored, so a
+   lost token can't be recovered; revoke it on the same page and create a new
+   one.
+2. The tokens page shows the registration command with your token filled in.
+   It looks like:
+
+   ```bash
+   claude mcp add --transport http prompt-saver --scope user \
+     https://prompt-saver-two.vercel.app/api/mcp \
+     --header "Authorization: Bearer ps_..."
+   ```
+
+   `--scope user` registers the server once for every project rather than
+   just the current one.
+
+### Tools
+
+Once connected, Claude Code can call five tools against your prompt library:
+
+- `search_prompts(query, limit?)` — searches title, description, content and
+  tags. Returns summaries only (id, title, description, tags, `updated_at`) —
+  never full bodies. `limit` defaults to 20 and is capped at 50.
+- `get_prompt(id)` — fetches the full text of one prompt.
+- `create_prompt(title, content, description?, tags?)` — saves a new prompt
+  along with its first version.
+- `update_prompt(id, ...)` — updates a prompt's draft in place, without
+  creating a new version.
+- `save_version(id, content, change_summary?)` — saves an immutable new
+  version of an existing prompt.
+
+There is no delete tool.
+
+### Favourite prompts as slash commands
+
+Any prompt marked as a favourite (the star in the web app) is also registered
+as a slash command, named from its title — "Daily Planning" becomes
+`/mcp__prompt-saver__daily-planning`. Archived favourites are excluded. Each
+command takes one optional `context` argument, appended to the prompt body:
+
+```
+/mcp__prompt-saver__daily-planning auth refactor
+```
+
+**Favourites are read once, when the session connects.** Starring a prompt
+does not add its slash command to a session that's already running — open a
+new session, or run `/mcp` to reconnect, to pick up newly starred prompts.
+Claude Code also caches remote server definitions between sessions, so a
+stale command list can persist longer than you'd expect.
+
+### Cold starts
+
+The database backing this app (Neon Postgres) scales its compute to zero when
+idle. The first MCP request after a period of inactivity may take noticeably
+longer while it wakes back up; subsequent requests are fast.
+
 ## Technology Stack
 
 - **Frontend**: Next.js 16, React 18, TypeScript (strict mode)
