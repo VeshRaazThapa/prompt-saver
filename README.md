@@ -19,11 +19,10 @@ without leaving the terminal.
 
 ### Connect
 
-1. Sign in at https://prompt-saver-two.vercel.app/, then generate a token at
-   **Settings → API Tokens** (`/app/settings/tokens`). The raw token is shown
-   exactly once — copy it immediately. Only its SHA-256 hash is stored, so a
-   lost token can't be recovered; revoke it on the same page and create a new
-   one.
+1. Sign in at https://prompt-saver-two.vercel.app/, then generate a token by
+   going to `/app/settings/tokens`. The raw token is shown exactly once —
+   copy it immediately. Only its SHA-256 hash is stored, so a lost token
+   can't be recovered; revoke it on the same page and create a new one.
 2. The tokens page shows the registration command with your token filled in.
    It looks like:
 
@@ -67,8 +66,6 @@ command takes one optional `context` argument, appended to the prompt body:
 **Favourites are read once, when the session connects.** Starring a prompt
 does not add its slash command to a session that's already running — open a
 new session, or run `/mcp` to reconnect, to pick up newly starred prompts.
-Claude Code also caches remote server definitions between sessions, so a
-stale command list can persist longer than you'd expect.
 
 ### Cold starts
 
