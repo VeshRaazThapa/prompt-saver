@@ -7,6 +7,9 @@ import type { UserContext } from '@/lib/auth/context';
 import {
   searchPromptsHandler,
   getPromptHandler,
+  createPromptHandler,
+  updatePromptHandler,
+  saveVersionHandler,
   DEFAULT_SEARCH_LIMIT,
   MAX_SEARCH_LIMIT,
 } from '@/lib/mcp/tools';
@@ -83,6 +86,60 @@ const handler = createMcpHandler(async (server) => {
     async ({ id }, ctx) => {
       const prompt = await getPromptHandler(workspaceFrom(ctx), id);
       return { content: [{ type: 'text', text: prompt.content }] };
+    }
+  );
+
+  server.registerTool(
+    'create_prompt',
+    {
+      title: 'Create prompt',
+      description: 'Save a new prompt to the library.',
+      inputSchema: z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+        description: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      }),
+    },
+    async (input, ctx) => {
+      const { id } = await createPromptHandler(workspaceFrom(ctx), input);
+      return { content: [{ type: 'text', text: `Created prompt ${id}` }] };
+    }
+  );
+
+  server.registerTool(
+    'update_prompt',
+    {
+      title: 'Update prompt',
+      description: 'Update an existing prompt draft without creating a new version.',
+      inputSchema: z.object({
+        id: z.string(),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        description: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      }),
+    },
+    async ({ id, ...rest }, ctx) => {
+      const updated = await updatePromptHandler(workspaceFrom(ctx), id, rest);
+      return { content: [{ type: 'text', text: `Updated "${updated.title}"` }] };
+    }
+  );
+
+  server.registerTool(
+    'save_version',
+    {
+      title: 'Save version',
+      description: 'Save an immutable new version of a prompt.',
+      inputSchema: z.object({
+        id: z.string(),
+        content: z.string().min(1),
+        change_summary: z.string().optional(),
+      }),
+    },
+    async ({ id, content, change_summary }, ctx) => {
+      const v = await saveVersionHandler(workspaceFrom(ctx), id, content, change_summary);
+      return { content: [{ type: 'text', text: `Saved version ${v.version_number}` }] };
     }
   );
 

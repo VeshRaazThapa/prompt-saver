@@ -1,6 +1,9 @@
-import type { Prompt } from '@/types';
+import type { Prompt, PromptVersion } from '@/types';
 import { requireOwnedPrompt } from '../actions/ownership';
 import { DrizzlePromptRepository } from '../db/drizzle/prompt-repository';
+import { DrizzlePromptVersionRepository } from '../db/drizzle/prompt-version-repository';
+import { generateId } from '../utils/id-generator';
+import { now } from '../utils/datetime';
 
 const repo = new DrizzlePromptRepository();
 
@@ -52,4 +55,86 @@ export async function searchPromptsHandler(
  */
 export async function getPromptHandler(workspaceId: string, id: string): Promise<Prompt> {
   return requireOwnedPrompt(id, workspaceId);
+}
+
+const versionRepo = new DrizzlePromptVersionRepository();
+
+export interface CreatePromptInput {
+  title: string;
+  content: string;
+  description?: string;
+  tags?: string[];
+}
+
+/** Reuses createWithFirstVersion so prompt and first version land atomically. */
+export async function createPromptHandler(
+  workspaceId: string,
+  input: CreatePromptInput
+): Promise<{ id: string }> {
+  const id = generateId();
+  const timestamp = now();
+
+  await repo.createWithFirstVersion(
+    {
+      id,
+      workspace_id: workspaceId,
+      title: input.title,
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      content: input.content,
+      tags: input.tags ?? [],
+      status: 'active',
+      is_favorite: false,
+      current_version_id: '',
+      created_at: timestamp,
+      updated_at: timestamp,
+      metadata: { version_count: 0 },
+    },
+    {
+      id: generateId(),
+      prompt_id: id,
+      version_number: 1,
+      content: input.content,
+      change_summary: 'Created via MCP',
+      created_at: timestamp,
+    }
+  );
+
+  return { id };
+}
+
+export interface UpdatePromptInput {
+  title?: string;
+  content?: string;
+  description?: string;
+  tags?: string[];
+}
+
+export async function updatePromptHandler(
+  workspaceId: string,
+  id: string,
+  input: UpdatePromptInput
+): Promise<Prompt> {
+  await requireOwnedPrompt(id, workspaceId);
+  return repo.update(id, input);
+}
+
+/** Reuses createVersionAtomic — row-locked, version number recomputed server-side. */
+export async function saveVersionHandler(
+  workspaceId: string,
+  id: string,
+  content: string,
+  changeSummary?: string
+): Promise<PromptVersion> {
+  await requireOwnedPrompt(id, workspaceId);
+  return versionRepo.createVersionAtomic(
+    {
+      id: generateId(),
+      prompt_id: id,
+      version_number: 0, // recomputed inside the transaction
+      content,
+      change_summary: changeSummary ?? 'Saved via MCP',
+      created_at: now(),
+    },
+    id
+  );
 }
