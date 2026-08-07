@@ -3,6 +3,7 @@ import { createMcpHandler, withMcpAuth } from 'mcp-handler';
 import type { AuthInfo } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { resolveTokenContext } from '@/lib/auth/token-context';
+import type { UserContext } from '@/lib/auth/context';
 import {
   searchPromptsHandler,
   getPromptHandler,
@@ -28,6 +29,19 @@ interface McpExtra {
  * into another request's prompt registration.
  */
 const contextStore = new AsyncLocalStorage<{ userId: string; workspaceId: string }>();
+
+/**
+ * Caches `withContext`'s token resolution per `Request` object so
+ * `verifyToken` doesn't resolve the same bearer token a second time.
+ * `withMcpAuth` passes the identical `Request` instance through to
+ * `verifyToken` (confirmed by reading its dist — no cloning), so keying on
+ * object identity is safe. A `null` entry (token resolved, found invalid) is
+ * a real cache hit, distinct from a missing entry (`undefined`, meaning
+ * `verifyToken` was reached some other way than `withContext`) — the
+ * fallback below re-resolves only in the latter case, so this stays correct
+ * even if something ever calls `authHandler` directly.
+ */
+const resolvedContextByRequest = new WeakMap<Request, UserContext | null>();
 
 function workspaceFrom(ctx: { http?: { authInfo?: AuthInfo } }): string {
   const extra = ctx.http?.authInfo?.extra as McpExtra | undefined;
@@ -74,8 +88,19 @@ const handler = createMcpHandler(async (server) => {
 
   const ctx = contextStore.getStore();
   if (ctx !== undefined) {
+    // A transient failure here (e.g. a DB hiccup) must not take down
+    // search_prompts / get_prompt registration above, which already
+    // succeeded — degrade to zero slash commands for this session instead
+    // of a 500 for the whole connection.
+    let favourites: Awaited<ReturnType<typeof favouritePromptsFor>> = [];
+    try {
+      favourites = await favouritePromptsFor(ctx.workspaceId);
+    } catch (error) {
+      console.error('Failed to load favourite prompts for MCP registration:', error);
+    }
+
     const taken = new Set<string>();
-    for (const prompt of await favouritePromptsFor(ctx.workspaceId)) {
+    for (const prompt of favourites) {
       const name = slugify(prompt.title, prompt.id, taken);
       taken.add(name);
 
@@ -105,12 +130,21 @@ const handler = createMcpHandler(async (server) => {
  * Returning undefined produces a 401. Every failure mode — malformed, unknown,
  * revoked — returns the same undefined so responses cannot be used to work out
  * which tokens were once real.
+ *
+ * Reads `resolvedContextByRequest` before resolving again: `withContext`
+ * already resolved this exact bearer token for this exact request to
+ * populate `contextStore`, so re-resolving here would be a second DB round
+ * trip (up to two SELECTs plus a possible `lastUsedAt` UPDATE) on every
+ * tool/prompt call in a session. Falls back to a real resolve when the
+ * request isn't in the map, so this function is still correct if ever
+ * invoked outside `withContext`.
  */
-const verifyToken = async (_req: Request, bearerToken?: string): Promise<AuthInfo | undefined> => {
+const verifyToken = async (req: Request, bearerToken?: string): Promise<AuthInfo | undefined> => {
   if (bearerToken === undefined) {
     return undefined;
   }
-  const ctx = await resolveTokenContext(bearerToken);
+  const cached = resolvedContextByRequest.get(req);
+  const ctx = cached !== undefined ? cached : await resolveTokenContext(bearerToken);
   if (ctx === null) {
     return undefined;
   }
@@ -137,6 +171,7 @@ const authHandler = withMcpAuth(handler, verifyToken, { required: true });
 async function withContext(req: Request): Promise<Response> {
   const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   const ctx = bearer === undefined ? null : await resolveTokenContext(bearer);
+  resolvedContextByRequest.set(req, ctx);
   if (ctx === null) {
     return authHandler(req);
   }
