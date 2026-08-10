@@ -4,7 +4,8 @@ import '../styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Prompt Saver',
-  description: 'Save, version, and search your AI prompts. Free, no signup.',
+  description:
+    'Save your prompts with instant search and automatic version history. Find any prompt in seconds.',
 };
 
 export default function RootLayout({
