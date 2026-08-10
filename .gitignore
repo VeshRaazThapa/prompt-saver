@@ -14,6 +14,7 @@ pnpm-error.log
 dist/
 build/
 out/
+tsconfig.tsbuildinfo
 
 # Testing
 coverage/
