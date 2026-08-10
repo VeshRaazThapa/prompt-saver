@@ -68,5 +68,5 @@ export async function resolveTokenContext(token: string): Promise<UserContext | 
     await db.update(apiTokens).set({ lastUsedAt: new Date() }).where(eq(apiTokens.id, row.id));
   }
 
-  return { userId: row.userId, workspaceId: workspace.id };
+  return { userId: row.userId, workspaceId: workspace.id, tokenId: row.id };
 }

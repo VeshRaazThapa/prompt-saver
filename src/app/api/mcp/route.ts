@@ -4,8 +4,9 @@ import type { AuthInfo } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { resolveTokenContext } from '@/lib/auth/token-context';
 import type { UserContext } from '@/lib/auth/context';
-import { AppError } from '@/lib/errors';
+import { AppError, RateLimitError } from '@/lib/errors';
 import { logger } from '@/lib/logging';
+import { checkRateLimit, RATE_LIMIT_WINDOW_MS } from '@/lib/rate-limit/repository';
 import {
   searchPromptsHandler,
   getPromptHandler,
@@ -259,6 +260,57 @@ const verifyToken = async (req: Request, bearerToken?: string): Promise<AuthInfo
 
 const authHandler = withMcpAuth(handler, verifyToken, { required: true });
 
+/** Fallback Retry-After, in whole seconds, used only when the rate-limit
+ * check itself fails (see `enforceRateLimit`) and the real window state
+ * that a real result would report is unknown. */
+const RATE_LIMIT_FALLBACK_RETRY_SECONDS = Math.ceil(RATE_LIMIT_WINDOW_MS / 1000);
+
+function rateLimitResponse(message: string, retryAfterSeconds: number): Response {
+  const err = new RateLimitError(message);
+  return new Response(JSON.stringify({ error: err.name, message: err.message }), {
+    status: err.statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+      'Retry-After': String(retryAfterSeconds),
+    },
+  });
+}
+
+/**
+ * Enforces the per-token MCP rate limit (src/lib/rate-limit/repository.ts)
+ * before the request reaches `authHandler` — an over-limit request never
+ * reaches the MCP handler at all. Returns a 429 Response to short-circuit
+ * the request, or null to let it continue.
+ *
+ * FAILS CLOSED on an unexpected error from `checkRateLimit`: this check
+ * exists specifically to protect a shared, free-tier Postgres instance from
+ * abuse, and a query against `rate_limits` failing (a DB blip, lock
+ * contention) is plausibly a symptom of the very flood this is meant to
+ * stop. Refusing the request sheds load; failing open would let an
+ * unthrottled burst straight through at exactly the moment throttling
+ * matters most. This adds no materially new availability risk: every other
+ * MCP tool call already depends on this same database for reads/writes, so
+ * a DB outage already takes the endpoint down regardless of this check.
+ */
+async function enforceRateLimit(tokenId: string): Promise<Response | null> {
+  const result = await checkRateLimit(tokenId).catch((error: unknown) => {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Rate limit check failed; refusing request (fail closed)', err);
+    return null;
+  });
+
+  if (result === null) {
+    return rateLimitResponse(
+      'Rate limit check failed. Please try again shortly.',
+      RATE_LIMIT_FALLBACK_RETRY_SECONDS
+    );
+  }
+  if (result.allowed) {
+    return null;
+  }
+  return rateLimitResponse('Too many requests. Please slow down.', result.retryAfterSeconds);
+}
+
 /**
  * Populates `contextStore` before `authHandler` runs, so `initializeServer`
  * (invoked deep inside it, per request) can read the resolved identity back
@@ -275,6 +327,12 @@ async function withContext(req: Request): Promise<Response> {
   resolvedContextByRequest.set(req, ctx);
   if (ctx === null) {
     return authHandler(req);
+  }
+  if (ctx.tokenId !== undefined) {
+    const limited = await enforceRateLimit(ctx.tokenId);
+    if (limited !== null) {
+      return limited;
+    }
   }
   return contextStore.run(ctx, () => authHandler(req));
 }

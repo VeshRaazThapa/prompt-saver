@@ -7,6 +7,7 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  primaryKey,
 } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
@@ -105,4 +106,24 @@ export const apiTokens = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
   },
   (t) => ({ userIdx: index('api_tokens_user_id_idx').on(t.userId) })
+);
+
+/**
+ * Fixed-window rate-limit counters for the MCP endpoint, one row per token
+ * per active window. See src/lib/rate-limit/repository.ts for the window
+ * size, request ceiling, and bookkeeping (upsert + delete-older-windows)
+ * that keeps this table bounded rather than growing forever.
+ */
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    tokenId: text('token_id')
+      .notNull()
+      .references(() => apiTokens.id, { onDelete: 'cascade' }),
+    windowStart: timestamp('window_start', { withTimezone: true }).notNull(),
+    count: integer('count').notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.tokenId, t.windowStart] }),
+  })
 );

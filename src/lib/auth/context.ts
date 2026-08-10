@@ -7,6 +7,15 @@ import { generateId } from '../utils/id-generator';
 export interface UserContext {
   userId: string;
   workspaceId: string;
+  /**
+   * The API token that resolved this context, when authentication happened
+   * via `resolveTokenContext` (the MCP door). Undefined for a session-based
+   * context from `getCurrentContext` below, which has no notion of a token.
+   * MCP-side rate limiting keys off this rather than userId/workspaceId
+   * because the token, not the user, is the revocable unit that identifies
+   * the caller.
+   */
+  tokenId?: string;
 }
 
 /**

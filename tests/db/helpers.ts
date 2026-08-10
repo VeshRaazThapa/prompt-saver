@@ -61,7 +61,7 @@ export async function resetDb(): Promise<void> {
 
   const db = getDb();
   await db.execute(
-    sql`TRUNCATE TABLE prompt_versions, prompts, workspaces, users RESTART IDENTITY CASCADE`
+    sql`TRUNCATE TABLE rate_limits, prompt_versions, prompts, workspaces, users RESTART IDENTITY CASCADE`
   );
 }
 
