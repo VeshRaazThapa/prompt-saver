@@ -291,7 +291,7 @@ supplied by the client.
 
 ## License
 
-Proprietary - All rights reserved
+MIT — see [LICENSE](./LICENSE).
 
 ## Support
 

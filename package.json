@@ -2,6 +2,7 @@
   "name": "prompt-saver",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "LLM Prompt Intelligence Platform - Create, test, and collaborate on prompts with multiple LLM providers",
   "scripts": {
     "dev": "next dev",
