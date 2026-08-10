@@ -213,7 +213,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
               {
                 num: '2',
                 title: 'Version',
-                body: 'Every edit is automatically versioned. Compare any two versions side by side.',
+                body: 'Every edit is automatically versioned. See exactly what changed between any two.',
               },
               {
                 num: '3',
@@ -266,7 +266,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
                 </svg>
               ),
               title: 'Instant search',
-              body: 'Full-text search across everything \u2014 titles, content, tags. Find any prompt in seconds, not minutes.',
+              body: 'Search titles, content, and tags for any word or partial word \u2014 no need to remember the exact phrasing. Find any prompt in seconds, not minutes.',
             },
             {
               icon: (
@@ -337,7 +337,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
             />
           </svg>
         </Link>
-        <p className="mt-3 text-[13px] text-stone-400">Free. Sign in with Google to get started.</p>
+        <p className="mt-3 text-[13px] text-stone-400">Sign in with Google to get started.</p>
       </section>
 
       {/* Footer */}
