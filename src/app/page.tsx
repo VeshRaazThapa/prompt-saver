@@ -53,7 +53,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
               />
             </svg>
           </Link>
-          <p className="mt-3 text-[13px] text-stone-400">Free forever. Sign in with Google.</p>
+          <p className="mt-3 text-[13px] text-stone-400">Sign in with Google.</p>
         </div>
 
         {/* App Preview */}
@@ -293,8 +293,8 @@ export default async function LandingPage(): Promise<React.ReactElement> {
                   />
                 </svg>
               ),
-              title: 'Zero friction',
-              body: 'No account, no API key, no onboarding wizard. Open Prompt Saver and start saving prompts. Literally.',
+              title: 'Zero setup',
+              body: 'No API key to configure, no wizard to click through, nothing to install. Sign in with Google and start saving prompts. Literally.',
             },
           ].map((f) => (
             <div
