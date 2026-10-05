@@ -31,6 +31,7 @@ test('// picker inserts into a real ProseMirror editor, replacing the query', as
   const editor = page.locator('.ProseMirror');
   await editor.click();
   await page.keyboard.type('Please //code');
+  await expect(page.locator('[data-ps-picker]')).toHaveCount(1);
   await page.keyboard.press('Enter');
   await expect(editor).toContainText('Please Review this code:');
   await expect(editor).toContainText('focus on bugs ✅');
@@ -48,15 +49,20 @@ test('// picker works in a real Quill editor (Gemini)', async ({ context }) => {
   await expect(editor).toContainText('Write a polite reply.');
 });
 
-test('https:// does not open the picker; Esc leaves text untouched', async ({ context }) => {
+test('https:// does not open the picker; Esc closes an open one and leaves text untouched', async ({ context }) => {
   const page = await context.newPage();
   await page.goto('https://claude.ai/new');
   const editor = page.locator('.ProseMirror');
+  const picker = page.locator('[data-ps-picker]');
   await editor.click();
   await page.keyboard.type('see https://x');
+  await page.waitForTimeout(300);
+  await expect(picker).toHaveCount(0);
   await page.keyboard.press('Enter'); // would pick a prompt if the picker were open
   await expect(editor).not.toContainText('Review this code');
   await page.keyboard.type(' //');
+  await expect(picker).toHaveCount(1); // positive control: the test can see an open picker
   await page.keyboard.press('Escape');
-  await expect(editor).toContainText('//');
+  await expect(picker).toHaveCount(0);
+  await expect(editor).toHaveText(/see https:\/\/x\s*\/\/$/);
 });

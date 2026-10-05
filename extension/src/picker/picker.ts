@@ -22,6 +22,7 @@ const LABEL = { save: 'Save current draft…', signin: 'Sign in to Prompt Saver'
 
 export function createPicker(opts: Opts) {
   const host = opts.root ?? document.createElement('div');
+  host.setAttribute('data-ps-picker', '');
   const shadow = host.attachShadow({ mode: opts.root !== undefined ? 'open' : 'closed' });
   const style = document.createElement('style');
   style.textContent = css;
