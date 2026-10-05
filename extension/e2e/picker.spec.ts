@@ -66,3 +66,58 @@ test('https:// does not open the picker; Esc closes an open one and leaves text 
   await expect(picker).toHaveCount(0);
   await expect(editor).toHaveText(/see https:\/\/x\s*\/\/$/);
 });
+
+async function serviceWorker(context: BrowserContext) {
+  const [sw] = context.serviceWorkers();
+  return sw ?? context.waitForEvent('serviceworker');
+}
+
+test('clipboard fallback: ps-insert on a page with no chat box copies the text and shows the Copied toast', async ({ context }) => {
+  const page = await context.newPage();
+  await page.goto('https://chatgpt.com/');
+  const sw = await serviceWorker(context);
+  const text = 'Fallback line 1\nLine 2 ✅ 日本';
+  // Same path the panel's insertIntoTab uses: the background sends ps-insert to the tab's content script.
+  // Retry until the content script has registered its listener.
+  await expect
+    .poll(
+      () =>
+        sw.evaluate(async (t) => {
+          const c = (globalThis as any).chrome;
+          const [tab] = await c.tabs.query({ url: 'https://chatgpt.com/*' });
+          try {
+            return await c.tabs.sendMessage(tab.id, { type: 'ps-insert', text: t });
+          } catch {
+            return null;
+          }
+        }, text),
+      { timeout: 10_000 },
+    )
+    .toEqual({ ok: true });
+  await expect(page.getByRole('status')).toContainText('Copied');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(text);
+});
+
+test('side panel Insert: insertIntoTab from an extension page puts the text in the ProseMirror editor', async ({ context }) => {
+  const claude = await context.newPage();
+  await claude.goto('https://claude.ai/new');
+  const editor = claude.locator('.ProseMirror');
+  await expect(editor).toBeVisible();
+  const sw = await serviceWorker(context);
+  const extId = new URL(sw.url()).host;
+  const tabId = await sw.evaluate(async () => {
+    const [tab] = await (globalThis as any).chrome.tabs.query({ url: 'https://claude.ai/*' });
+    return tab.id as number;
+  });
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extId}/sidepanel.html`);
+  const text = 'Panel line 1\nLine 2 ✅ 日本';
+  await expect
+    .poll(() => panel.evaluate(([id, t]) => (globalThis as any).chrome.runtime.sendMessage({ type: 'insertIntoTab', tabId: id, text: t }), [tabId, text] as const), {
+      timeout: 10_000,
+    })
+    .toEqual({ ok: true, data: null });
+  await expect(editor).toContainText('Panel line 1');
+  await expect(editor).toContainText('Line 2 ✅ 日本');
+  await expect(editor.locator('p')).toHaveCount(2);
+});
