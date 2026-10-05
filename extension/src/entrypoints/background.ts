@@ -2,7 +2,7 @@ import { createApi } from '@/lib/api';
 import { setToken } from '@/lib/cache';
 import { createRouter } from '@/lib/messages';
 import { SITE_BASE } from '@/lib/config';
-import type { Msg } from '@/lib/types';
+import { makeExternalListener, makeMessageListener } from '@/lib/listeners';
 
 export default defineBackground(() => {
   const route = createRouter({
@@ -21,17 +21,17 @@ export default defineBackground(() => {
 
   void browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-  browser.runtime.onMessage.addListener((msg: Msg, sender) => route(msg, sender));
+  browser.runtime.onMessage.addListener(makeMessageListener(route));
 
   // Token hand-off from /extension/connect. Only our site can reach this
   // (manifest externally_connectable); the origin check is defence in depth.
-  browser.runtime.onMessageExternal.addListener(async (msg: { type?: string; token?: string }, sender) => {
-    if (sender.origin !== new URL(SITE_BASE).origin && !sender.origin?.startsWith('http://localhost:3000')) return { ok: false };
-    if (msg.type !== 'ps-token' || typeof msg.token !== 'string' || !msg.token.startsWith('ps_')) return { ok: false };
-    await setToken(msg.token);
-    void route({ type: 'getPrompts', refresh: true });
-    return { ok: true };
-  });
+  browser.runtime.onMessageExternal.addListener(
+    makeExternalListener({
+      allowedOrigins: (o) => o === new URL(SITE_BASE).origin || (o?.startsWith('http://localhost:3000') ?? false),
+      setToken,
+      onConnected: () => void route({ type: 'getPrompts', refresh: true }),
+    }),
+  );
 
   browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.create({ id: 'ps-save-selection', title: 'Save to Prompt Saver', contexts: ['selection'] });
