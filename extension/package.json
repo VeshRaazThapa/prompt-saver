@@ -1,0 +1,41 @@
+{
+  "name": "prompt-saver-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@fontsource/dm-sans": "^5.0.0",
+    "@fontsource/jetbrains-mono": "^5.0.0"
+  },
+  "devDependencies": {
+    "wxt": "^0.20.0",
+    "@wxt-dev/module-react": "~1.1.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "typescript": "^5.3.3",
+    "vitest": "^3.0.0",
+    "vite": "^7.0.0",
+    "jsdom": "^25.0.0",
+    "@testing-library/react": "^16.0.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@playwright/test": "^1.48.0",
+    "esbuild": "^0.27.0",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.33.0",
+    "prosemirror-model": "^1.21.0",
+    "prosemirror-schema-basic": "^1.2.2",
+    "quill": "^2.0.2"
+  }
+}
