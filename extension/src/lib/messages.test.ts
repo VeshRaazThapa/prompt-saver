@@ -83,4 +83,65 @@ describe('router', () => {
     sendToTab.mockResolvedValueOnce({ ok: false });
     expect(await route({ type: 'insertIntoTab', tabId: 3, text: 'hi' })).toMatchObject({ ok: false, code: 'no_editor' });
   });
+
+  describe('account switches and disconnects mid-request', () => {
+    function deferred<T>() {
+      let resolve!: (v: T) => void;
+      let reject!: (e: unknown) => void;
+      const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+      return { promise, resolve, reject };
+    }
+
+    it('a refresh that finishes after disconnect does not rewrite the cache', async () => {
+      await setToken('ps_a');
+      const d = deferred<unknown[]>();
+      const { route } = setup({ list: vi.fn().mockReturnValue(d.promise) });
+      const pending = route({ type: 'getPrompts', refresh: true });
+      await route({ type: 'disconnect' });
+      d.resolve([P('old-account')]);
+      expect(await pending).toEqual({ ok: true, data: { prompts: [], signedIn: false } });
+      expect(await getPrompts()).toEqual({ prompts: [], syncedAt: 0 });
+      expect(await getToken()).toBeNull();
+    });
+
+    it('a refresh that finishes after an account switch does not write the old account into the cache', async () => {
+      await setToken('ps_a');
+      const d = deferred<unknown[]>();
+      const { route } = setup({ list: vi.fn().mockReturnValue(d.promise) });
+      const pending = route({ type: 'getPrompts', refresh: true });
+      await setToken('ps_b');
+      d.resolve([P('old-account')]);
+      const r = await pending;
+      expect(r).toMatchObject({ ok: true, data: { signedIn: true } });
+      expect(JSON.stringify(r)).not.toContain('old-account');
+      expect((await getPrompts()).prompts).toEqual([]);
+    });
+
+    it('a 401 for an old token does not clear a newer token', async () => {
+      await setToken('ps_a');
+      const d = deferred<unknown[]>();
+      const { route } = setup({ list: vi.fn().mockReturnValue(d.promise) });
+      const pending = route({ type: 'getPrompts', refresh: true });
+      await setToken('ps_b');
+      await setPrompts([P('b-cached')]);
+      d.reject(new ApiError('unauthorized', 'x'));
+      const r = await pending;
+      expect(await getToken()).toBe('ps_b');
+      expect((await getPrompts()).prompts).toEqual([P('b-cached')]);
+      expect(r).not.toMatchObject({ code: 'unauthorized' });
+    });
+
+    it('a write that gets 401 for an old token does not clear a newer token', async () => {
+      await setToken('ps_a');
+      const d = deferred<unknown>();
+      const { route } = setup({ create: vi.fn().mockReturnValue(d.promise) });
+      const pending = route({ type: 'createPrompt', title: 't', content: 'c' });
+      await setToken('ps_b');
+      d.reject(new ApiError('unauthorized', 'x'));
+      const r = await pending;
+      expect(await getToken()).toBe('ps_b');
+      expect(r).toMatchObject({ ok: false });
+      expect(r).not.toMatchObject({ code: 'unauthorized' });
+    });
+  });
 });

@@ -21,4 +21,13 @@ describe('cache', () => {
     expect(await takePendingSave()).toEqual({ title: 't', content: 'c' });
     expect(await takePendingSave()).toBeNull();
   });
+  it('a different token clears the previous account cache; the same token keeps it', async () => {
+    await setToken('ps_a');
+    await setPrompts([P], 123);
+    await setToken('ps_a');
+    expect(await getPrompts()).toEqual({ prompts: [P], syncedAt: 123 });
+    await setToken('ps_b');
+    expect(await getToken()).toBe('ps_b');
+    expect(await getPrompts()).toEqual({ prompts: [], syncedAt: 0 });
+  });
 });

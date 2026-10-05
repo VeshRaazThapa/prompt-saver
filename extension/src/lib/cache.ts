@@ -7,7 +7,11 @@ const syncedAt = storage.defineItem<number>('local:psSyncedAt', { fallback: 0 })
 const pending = storage.defineItem<PendingSave | null>('session:psPendingSave', { fallback: null });
 
 export const getToken = (): Promise<string | null> => token.getValue();
-export const setToken = (t: string): Promise<void> => token.setValue(t);
+/** Stores a token. A different token means a different account: drop the old account's cache first. */
+export async function setToken(t: string): Promise<void> {
+  if ((await token.getValue()) !== t) await Promise.all([prompts.removeValue(), syncedAt.removeValue()]);
+  await token.setValue(t);
+}
 export async function clearAuth(): Promise<void> {
   await Promise.all([token.removeValue(), prompts.removeValue(), syncedAt.removeValue()]);
 }

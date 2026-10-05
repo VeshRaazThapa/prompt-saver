@@ -12,9 +12,15 @@ interface Deps {
 const ok = <T>(data: T): MsgResult<T> => ({ ok: true, data });
 const signedOut: MsgResult<never> = { ok: false, code: 'signed_out', message: 'Connect your Prompt Saver account first.' };
 
-async function fromError(e: unknown): Promise<MsgResult<never>> {
+const accountChanged: MsgResult<never> = { ok: false, code: 'internal', message: 'Your account changed. Please try again.' };
+
+/** `token` is the token the failed request used. A 401 only ends the session if that token is still current. */
+async function fromError(e: unknown, token: string): Promise<MsgResult<never>> {
   if (e instanceof ApiError) {
-    if (e.code === 'unauthorized') await clearAuth();
+    if (e.code === 'unauthorized') {
+      if ((await getToken()) !== token) return accountChanged;
+      await clearAuth();
+    }
     return { ok: false, code: e.code, message: e.message, ...(e.retryAfter !== undefined ? { retryAfter: e.retryAfter } : {}) };
   }
   return { ok: false, code: 'internal', message: 'Something went wrong. Please try again.' };
@@ -23,10 +29,18 @@ async function fromError(e: unknown): Promise<MsgResult<never>> {
 export function createRouter(deps: Deps) {
   const now = deps.now ?? Date.now;
 
-  async function refresh(token: string): Promise<ExtPrompt[]> {
+  /** Fetches with `token`; returns null (and writes nothing) if the token changed while the request was in flight. */
+  async function refresh(token: string): Promise<ExtPrompt[] | null> {
     const list = await deps.apiFor(token).list();
+    if ((await getToken()) !== token) return null;
     await setPrompts(list, now());
     return list;
+  }
+
+  /** What is stored right now, without touching the network. */
+  async function currentState(): Promise<MsgResult> {
+    if ((await getToken()) === null) return ok({ prompts: [], signedIn: false });
+    return ok({ prompts: (await getPrompts()).prompts, signedIn: true });
   }
 
   async function getPromptsMsg(force: boolean): Promise<MsgResult> {
@@ -35,10 +49,12 @@ export function createRouter(deps: Deps) {
     const cached = await getPrompts();
     if (!force && now() - cached.syncedAt < STALE_MS) return ok({ prompts: cached.prompts, signedIn: true });
     try {
-      return ok({ prompts: await refresh(token), signedIn: true });
+      const list = await refresh(token);
+      return list === null ? currentState() : ok({ prompts: list, signedIn: true });
     } catch (e) {
+      if ((await getToken()) !== token) return currentState();
       if (e instanceof ApiError && e.code !== 'unauthorized') return ok({ prompts: cached.prompts, signedIn: true });
-      return fromError(e);
+      return fromError(e, token);
     }
   }
 
@@ -48,7 +64,7 @@ export function createRouter(deps: Deps) {
     try {
       return await fn(token);
     } catch (e) {
-      return fromError(e);
+      return fromError(e, token);
     }
   }
 
