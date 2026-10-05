@@ -73,6 +73,37 @@ The database backing this app (Neon Postgres) scales its compute to zero when
 idle. The first MCP request after a period of inactivity may take noticeably
 longer while it wakes back up; subsequent requests are fast.
 
+## Chrome extension
+
+The Chrome extension lives in `extension/`. It lets users save prompts from any webpage or AI chat interface.
+
+### Setup and development
+
+```bash
+cd extension
+npm install
+npm run dev
+```
+
+The development build is unpacked and ready to load into Chrome. Configuration
+requires the web app's `NEXT_PUBLIC_EXTENSION_IDS` environment variable to
+contain the extension's ID (visible in `chrome://extensions/` when unpacked).
+
+### API
+
+The extension calls these endpoints on the web app's `/api/v1/prompts` route:
+
+| Method | Path | Purpose | Headers |
+|--------|------|---------|---------|
+| GET | `/api/v1/prompts` | List prompts. Accepts `?q=<query>&limit=<n>` (limit ≤200). | `Authorization: Bearer ps_<token>` |
+| POST | `/api/v1/prompts` | Create a new prompt. | `Authorization: Bearer ps_<token>` |
+| GET | `/api/v1/prompts/:id` | Fetch a single prompt by ID. | `Authorization: Bearer ps_<token>` |
+| PATCH | `/api/v1/prompts/:id` | Update a prompt. | `Authorization: Bearer ps_<token>` |
+
+All endpoints require a bearer token prefixed with `ps_`.
+
+For privacy details, see [`/privacy`](/privacy).
+
 ## Technology Stack
 
 - **Frontend**: Next.js 16, React 18, TypeScript (strict mode)
