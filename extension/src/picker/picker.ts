@@ -88,7 +88,7 @@ export function createPicker(opts: Opts) {
     isOpen: () => open,
     contains: (node: Node): boolean => node === host || host.contains(node),
     handleKey(e: KeyboardEvent): boolean {
-      if (!open) return false;
+      if (!open || e.isComposing || e.keyCode === 229) return false;
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         if (rows.length > 0) active = (active + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length;
         render();

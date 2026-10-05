@@ -63,4 +63,14 @@ describe('picker', () => {
     const { picker } = make({ prompts: [p('a')], signedIn: true });
     expect(picker.handleKey(key('Enter'))).toBe(false);
   });
+
+  it('ignores keys during IME composition', () => {
+    const { picker, onPick } = make({ prompts: [p('a')], signedIn: true });
+    picker.open(RECT, '');
+    expect(picker.handleKey(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, cancelable: true }))).toBe(false);
+    const e229 = new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, cancelable: true });
+    expect(picker.handleKey(e229)).toBe(false);
+    expect(onPick).not.toHaveBeenCalled();
+    expect(picker.isOpen()).toBe(true);
+  });
 });
