@@ -189,6 +189,17 @@ describe('GET/PATCH /api/v1/prompts/:id', () => {
       (await onePATCH(req(`${BASE}/p1`, { method: 'PATCH', token, body: {} }), params('p1'))).status
     ).toBe(400);
   });
+
+  it('400s when PATCH sets content to an empty string', async () => {
+    const { token, workspaceId } = await userWithToken();
+    await getDb().insert(prompts).values({ id: 'p1', workspaceId, title: 'T', content: 'C' });
+    const res = await onePATCH(
+      req(`${BASE}/p1`, { method: 'PATCH', token, body: { content: '' } }),
+      params('p1')
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe('validation');
+  });
 });
 
 describe('CORS', () => {

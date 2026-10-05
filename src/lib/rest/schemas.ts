@@ -13,7 +13,7 @@ export const createPromptBody = z.object({
 export const patchPromptBody = z
   .object({
     title: z.string().trim().min(1).max(200).optional(),
-    content: z.string().max(MAX_CONTENT_LENGTH).optional(),
+    content: z.string().min(1).max(MAX_CONTENT_LENGTH).optional(),
     description: z.string().max(2000).optional(),
     tags: tags.optional(),
     isFavorite: z.boolean().optional(),
