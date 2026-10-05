@@ -19,11 +19,12 @@ export default function PrivacyPage(): React.ReactElement {
 
       <h2 className="mt-8 text-xl font-semibold">The Chrome extension</h2>
       <p className="mt-2">
-        The extension reads the text in an AI chat box only when you insert a prompt, open the
-        prompt picker by typing &quot;//&quot;, or choose &quot;Save current draft&quot;. It reads
-        text you select on a page only when you choose &quot;Save to Prompt Saver&quot;. It does not
-        read or send your conversations otherwise. Your prompt library is cached in the
-        extension&apos;s local storage so the picker opens instantly.
+        While you type in a supported AI chat box, the extension checks the text locally for
+        &quot;//&quot; to show the prompt picker. That text never leaves your browser. The extension
+        sends text to Prompt Saver only when you save a prompt (from the picker, the side panel, or
+        right-click &quot;Save to Prompt Saver&quot;). It does not send your conversations. Your
+        prompt library is cached in the extension&apos;s local storage so the picker opens
+        instantly.
       </p>
 
       <h2 className="mt-8 text-xl font-semibold">What we don&apos;t do</h2>
