@@ -93,12 +93,12 @@ contain the extension's ID (visible in `chrome://extensions/` when unpacked).
 
 The extension calls these endpoints on the web app's `/api/v1/prompts` route:
 
-| Method | Path | Purpose | Headers |
-|--------|------|---------|---------|
-| GET | `/api/v1/prompts` | List prompts. Accepts `?q=<query>&limit=<n>` (limit ≤200). | `Authorization: Bearer ps_<token>` |
-| POST | `/api/v1/prompts` | Create a new prompt. | `Authorization: Bearer ps_<token>` |
-| GET | `/api/v1/prompts/:id` | Fetch a single prompt by ID. | `Authorization: Bearer ps_<token>` |
-| PATCH | `/api/v1/prompts/:id` | Update a prompt. | `Authorization: Bearer ps_<token>` |
+| Method | Path                  | Purpose                                                    | Headers                            |
+| ------ | --------------------- | ---------------------------------------------------------- | ---------------------------------- |
+| GET    | `/api/v1/prompts`     | List prompts. Accepts `?q=<query>&limit=<n>` (limit ≤200). | `Authorization: Bearer ps_<token>` |
+| POST   | `/api/v1/prompts`     | Create a new prompt.                                       | `Authorization: Bearer ps_<token>` |
+| GET    | `/api/v1/prompts/:id` | Fetch a single prompt by ID.                               | `Authorization: Bearer ps_<token>` |
+| PATCH  | `/api/v1/prompts/:id` | Update a prompt.                                           | `Authorization: Bearer ps_<token>` |
 
 All endpoints require a bearer token prefixed with `ps_`.
 
