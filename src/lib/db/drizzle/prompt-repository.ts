@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 import type { Prompt, PromptVersion } from '@/types';
 import type { IPromptRepository } from '../repositories/types';
 import { NotFoundError } from '../../errors';
@@ -183,5 +183,36 @@ export class DrizzlePromptRepository implements IPromptRepository {
       .from(prompts)
       .where(eq(prompts.workspaceId, workspaceId));
     return row?.value ?? 0;
+  }
+
+  /** Non-archived prompts in a workspace — the number the prompt cap counts. */
+  async countNonArchived(workspaceId: string): Promise<number> {
+    const [row] = await getDb()
+      .select({ value: count() })
+      .from(prompts)
+      .where(and(eq(prompts.workspaceId, workspaceId), ne(prompts.status, 'archived')));
+    return row?.value ?? 0;
+  }
+
+  /** The extension's cached library: non-archived, favourites first, then newest. */
+  async listForExtension(workspaceId: string, query: string, limit: number): Promise<Prompt[]> {
+    const filters = [eq(prompts.workspaceId, workspaceId), ne(prompts.status, 'archived')];
+    if (query.trim() !== '') {
+      const pattern = `%${escapeLike(query.trim())}%`;
+      const match = or(
+        ilike(prompts.title, pattern),
+        ilike(prompts.description, pattern),
+        ilike(prompts.content, pattern),
+        sql`EXISTS (SELECT 1 FROM unnest(${prompts.tags}) AS tag WHERE tag ILIKE ${pattern})`
+      );
+      if (match !== undefined) filters.push(match);
+    }
+    const rows = await getDb()
+      .select()
+      .from(prompts)
+      .where(and(...filters))
+      .orderBy(desc(prompts.isFavorite), desc(prompts.updatedAt))
+      .limit(limit);
+    return rows.map(toPrompt);
   }
 }

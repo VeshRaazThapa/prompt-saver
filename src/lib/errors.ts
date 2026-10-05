@@ -10,7 +10,7 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
 
-    Object.setPrototypeOf(this, AppError.prototype);
+    Object.setPrototypeOf(this, new.target.prototype);
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -132,4 +132,14 @@ export function formatError(error: Error): {
   }
 
   return formatted;
+}
+
+/**
+ * A per-user cap was reached (403). See src/lib/limits.ts.
+ */
+export class LimitReachedError extends AppError {
+  constructor(message: string) {
+    super(message, 403);
+    this.name = 'LimitReachedError';
+  }
 }

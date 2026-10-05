@@ -4,6 +4,8 @@ import { DrizzlePromptRepository } from '../db/drizzle/prompt-repository';
 import { DrizzlePromptVersionRepository } from '../db/drizzle/prompt-version-repository';
 import { generateId } from '../utils/id-generator';
 import { now } from '../utils/datetime';
+import { assertContentLength, MAX_PROMPTS_PER_WORKSPACE, MAX_EXTENSION_LIST } from '../limits';
+import { LimitReachedError } from '../errors';
 
 const repo = new DrizzlePromptRepository();
 
@@ -71,6 +73,12 @@ export async function createPromptHandler(
   workspaceId: string,
   input: CreatePromptInput
 ): Promise<{ id: string }> {
+  assertContentLength(input.content);
+  if ((await repo.countNonArchived(workspaceId)) >= MAX_PROMPTS_PER_WORKSPACE) {
+    throw new LimitReachedError(
+      `You've reached ${MAX_PROMPTS_PER_WORKSPACE.toLocaleString('en-US')} prompts. Archive some on the website to add more.`
+    );
+  }
   const id = generateId();
   const timestamp = now();
 
@@ -107,6 +115,7 @@ export interface UpdatePromptInput {
   content?: string;
   description?: string;
   tags?: string[];
+  isFavorite?: boolean;
 }
 
 export async function updatePromptHandler(
@@ -114,8 +123,13 @@ export async function updatePromptHandler(
   id: string,
   input: UpdatePromptInput
 ): Promise<Prompt> {
+  if (input.content !== undefined) assertContentLength(input.content);
   await requireOwnedPrompt(id, workspaceId);
-  return repo.update(id, input);
+  const { isFavorite, ...rest } = input;
+  return repo.update(id, {
+    ...rest,
+    ...(isFavorite !== undefined ? { is_favorite: isFavorite } : {}),
+  });
 }
 
 /**
@@ -132,6 +146,7 @@ export async function saveVersionHandler(
   content: string,
   changeSummary?: string
 ): Promise<PromptVersion> {
+  assertContentLength(content);
   await requireOwnedPrompt(id, workspaceId);
   const version = await versionRepo.createVersionAtomic(
     {
@@ -148,4 +163,20 @@ export async function saveVersionHandler(
   await repo.update(id, { content });
 
   return version;
+}
+
+export interface PromptWithContent extends PromptSummary {
+  content: string;
+  is_favorite: boolean;
+}
+
+/** Full bodies for the extension's local cache. Capped at MAX_EXTENSION_LIST. */
+export async function listPromptsWithContentHandler(
+  workspaceId: string,
+  query: string,
+  limit: number
+): Promise<PromptWithContent[]> {
+  const capped = Math.min(Math.max(1, limit), MAX_EXTENSION_LIST);
+  const found = await repo.listForExtension(workspaceId, query, capped);
+  return found.map((p) => ({ ...toSummary(p), content: p.content, is_favorite: p.is_favorite }));
 }
