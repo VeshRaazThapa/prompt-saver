@@ -107,6 +107,10 @@ export function runContentScript(adapter: SiteAdapter): void {
   });
 
   browser.runtime.onMessage.addListener((msg: { type?: string; text?: string }, _sender, sendResponse) => {
+    if (msg.type === 'ps-read-draft') {
+      sendResponse({ draft: adapter.readDraft() });
+      return false;
+    }
     if (msg.type !== 'ps-insert' || typeof msg.text !== 'string') return undefined;
     const editor = adapter.findEditor();
     if (editor === null) {
