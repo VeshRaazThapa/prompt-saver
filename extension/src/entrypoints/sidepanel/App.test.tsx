@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import { App } from './App';
 import { isSupportedUrl } from './useActiveTab';
 
 // Mocking approach (b): wxt storage/esbuild cannot load under jsdom, so '@/lib/cache' is
 // stubbed with in-memory no-ops and `wxt/browser` is mocked.
+let tokenCb: ((t: string | null) => void) | undefined;
 vi.mock('@/lib/cache', () => ({
   takePendingSave: vi.fn(async () => null),
   watchPendingSave: vi.fn(() => () => {}),
   watchPrompts: vi.fn(() => () => {}),
-  watchToken: vi.fn(() => () => {}),
+  watchToken: vi.fn((cb: (t: string | null) => void) => { tokenCb = cb; return () => {}; }),
 }));
 
 const P = (id: string, fav = false) => ({ id, title: `Title ${id}`, description: null, tags: [], updated_at: 'x', content: `body ${id}`, is_favorite: fav });
@@ -94,5 +95,19 @@ describe('App', () => {
     mockBackground({ getPrompts: () => ({ ok: false, code: 'unauthorized', message: 'x' }) });
     render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
     expect(await screen.findByRole('button', { name: /reconnect/i })).toBeTruthy();
+  });
+
+  it('unauthorized during a session (star) then token cleared shows Reconnect, not Connect account', async () => {
+    mockBackground({
+      getPrompts: () => ({ ok: true, data: { prompts: [P('a')], signedIn: true } }),
+      toggleFavorite: () => ({ ok: false, code: 'unauthorized', message: 'x' }),
+    });
+    render(<App activeTab={{ id: 1, url: 'https://example.com/' }} />);
+    fireEvent.click(await screen.findByRole('button', { name: /star title a/i }));
+    await waitFor(() => expect(sendMessage).toHaveBeenCalledWith({ type: 'toggleFavorite', id: 'a', isFavorite: true }));
+    await waitFor(() => expect(screen.getByRole('status') || true).toBeTruthy());
+    act(() => tokenCb!(null));
+    expect(await screen.findByRole('button', { name: /reconnect/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /connect account/i })).toBeNull();
   });
 });

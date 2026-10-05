@@ -54,12 +54,17 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
     return () => offs.forEach((off) => off());
   }, [load]);
 
+  // Any unauthorized result means the session ended: show Reconnect, not first-time Connect.
+  const track = <T,>(r: MsgResult<T>): MsgResult<T> => {
+    if (!r.ok && r.code === 'unauthorized') setNeedsReconnect(true);
+    return r;
+  };
   const visible = useMemo(() => filterPrompts(prompts, query, Infinity), [prompts, query]);
   const connect = () => window.open(`${SITE_BASE}/extension/connect?ext=${browser.runtime.id}`, '_blank');
   const canInsert = isSupportedUrl(activeTab.url) && activeTab.id !== undefined;
 
   async function insert(p: ExtPrompt) {
-    const r = await send({ type: 'insertIntoTab', tabId: activeTab.id!, text: p.content });
+    const r = track(await send({ type: 'insertIntoTab', tabId: activeTab.id!, text: p.content }));
     if (!r.ok) setNotice(r.message);
   }
   async function copy(p: ExtPrompt) {
@@ -67,7 +72,7 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
     setNotice('Copied');
   }
   async function star(p: ExtPrompt) {
-    const r = await send({ type: 'toggleFavorite', id: p.id, isFavorite: !p.is_favorite });
+    const r = track(await send({ type: 'toggleFavorite', id: p.id, isFavorite: !p.is_favorite }));
     if (!r.ok) setNotice(messageFor(r));
   }
   async function saveDraftFromTab() {
@@ -101,7 +106,7 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
           initial={view.initial}
           onCancel={() => setView({ kind: 'list' })}
           onSave={async (v) => {
-            const r = await sendWithRetry({ type: 'createPrompt', ...v });
+            const r = track(await sendWithRetry({ type: 'createPrompt', ...v }));
             if (r.ok) { setView({ kind: 'list' }); setNotice('Saved'); return null; }
             return messageFor(r);
           }}
@@ -115,12 +120,12 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Prompt Saver</h1>
         <div className="flex gap-1 text-sm">
-          <a className="rounded px-2 py-1 text-teal-700 hover:bg-stone-100" href={`${SITE_BASE}/app`} target="_blank" rel="noreferrer">Open Prompt Saver</a>
-          <button className="rounded px-2 py-1 text-stone-500 hover:bg-stone-100" onClick={() => void send({ type: 'disconnect' })}>Disconnect</button>
+          <a className="inline-flex min-h-11 items-center rounded px-2 text-teal-700 transition-colors duration-150 ease-out hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none" href={`${SITE_BASE}/app`} target="_blank" rel="noreferrer">Open Prompt Saver</a>
+          <button className="min-h-11 rounded px-2 text-stone-500 transition-colors duration-150 ease-out hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none" onClick={() => void send({ type: 'disconnect' })}>Disconnect</button>
         </div>
       </div>
       <input type="search" aria-label="Search prompts" placeholder="Search prompts" value={query} onChange={(e) => setQuery(e.target.value)}
-        className="w-full rounded-lg border border-stone-300 p-2 text-sm dark:border-stone-600 dark:bg-stone-900 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none" />
+        className="min-h-11 w-full rounded-lg border border-stone-300 p-2 text-sm transition-colors duration-150 ease-out dark:border-stone-600 dark:bg-stone-900 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none" />
       <div className="flex gap-2">
         <button onClick={() => setView({ kind: 'save', initial: { title: '', content: '' } })} className="min-h-11 flex-1 rounded-lg bg-teal-600 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-teal-700 focus-visible:ring-2">New prompt</button>
         {canInsert && (
