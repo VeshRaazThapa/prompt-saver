@@ -2,7 +2,7 @@ import React from 'react';
 
 export const metadata = { title: 'Privacy Policy — Prompt Saver' };
 
-const CONTACT = 'brthapa@maitriservices.com';
+const CONTACT = 'thapahimal777@gmail.com';
 
 export default function PrivacyPage(): React.ReactElement {
   return (
