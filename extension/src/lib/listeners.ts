@@ -13,6 +13,14 @@ export function makeMessageListener(route: Route) {
   };
 }
 
+const DEV_ORIGIN = 'http://localhost:3000';
+
+/** Exact origin match. The local dev site is accepted only in dev builds. */
+export function isAllowedTokenOrigin(origin: string | undefined, siteBase: string, dev: boolean): boolean {
+  if (origin === undefined) return false;
+  return origin === new URL(siteBase).origin || (dev && origin === DEV_ORIGIN);
+}
+
 export interface ExternalDeps {
   allowedOrigins: (origin: string | undefined) => boolean;
   setToken: (t: string) => Promise<void>;

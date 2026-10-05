@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from 'vitest';
-import { makeExternalListener, makeMessageListener } from './listeners';
+import { isAllowedTokenOrigin, makeExternalListener, makeMessageListener } from './listeners';
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -54,5 +54,20 @@ describe('makeExternalListener', () => {
     expect(send).toHaveBeenCalledTimes(2);
     expect(send).toHaveBeenCalledWith({ ok: false });
     expect(setToken).not.toHaveBeenCalled();
+  });
+});
+
+describe('isAllowedTokenOrigin', () => {
+  const site = 'https://prompt-saver-two.vercel.app';
+  it('accepts the site origin in any build', () => {
+    expect(isAllowedTokenOrigin(site, site, false)).toBe(true);
+    expect(isAllowedTokenOrigin(site, site, true)).toBe(true);
+  });
+  it('accepts exactly http://localhost:3000 only in dev builds', () => {
+    expect(isAllowedTokenOrigin('http://localhost:3000', site, true)).toBe(true);
+    expect(isAllowedTokenOrigin('http://localhost:3000', site, false)).toBe(false);
+  });
+  it.each(['http://localhost:30001', 'http://localhost:3000.evil.test', 'https://localhost:3000', undefined])('rejects %s', (o) => {
+    expect(isAllowedTokenOrigin(o, site, true)).toBe(false);
   });
 });

@@ -2,7 +2,7 @@ import { createApi } from '@/lib/api';
 import { setToken } from '@/lib/cache';
 import { createRouter } from '@/lib/messages';
 import { SITE_BASE } from '@/lib/config';
-import { makeExternalListener, makeMessageListener } from '@/lib/listeners';
+import { isAllowedTokenOrigin, makeExternalListener, makeMessageListener } from '@/lib/listeners';
 
 export default defineBackground(() => {
   const route = createRouter({
@@ -27,7 +27,7 @@ export default defineBackground(() => {
   // (manifest externally_connectable); the origin check is defence in depth.
   browser.runtime.onMessageExternal.addListener(
     makeExternalListener({
-      allowedOrigins: (o) => o === new URL(SITE_BASE).origin || (o?.startsWith('http://localhost:3000') ?? false),
+      allowedOrigins: (o) => isAllowedTokenOrigin(o, SITE_BASE, import.meta.env.DEV),
       setToken,
       onConnected: () => void route({ type: 'getPrompts', refresh: true }),
     }),
