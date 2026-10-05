@@ -6,6 +6,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
   srcDir: 'src',
+  outDir: process.env.WXT_OUT_DIR ?? '.output',
   modules: ['@wxt-dev/module-react'],
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {

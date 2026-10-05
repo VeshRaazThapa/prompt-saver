@@ -9,7 +9,7 @@
     "zip": "wxt zip",
     "postinstall": "wxt prepare",
     "test": "vitest run",
-    "e2e": "playwright test",
+    "e2e": "node e2e/fixtures/build.mjs && WXT_OUT_DIR=.output-e2e WXT_API_BASE=http://localhost:4599 wxt build && playwright test",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

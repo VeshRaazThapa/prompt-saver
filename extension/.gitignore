@@ -4,3 +4,4 @@ node_modules
 e2e/fixtures/dist
 test-results
 playwright-report
+.output-e2e
