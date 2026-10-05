@@ -1,0 +1,14 @@
+:host { all: initial; }
+.ps-list { position: fixed; z-index: 2147483647; width: 360px; max-height: 360px; overflow-y: auto;
+  background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; box-shadow: 0 8px 24px rgba(28,25,23,.15);
+  font: 14px/1.4 'DM Sans', system-ui, sans-serif; color: #1c1917; padding: 4px; }
+.ps-row { padding: 8px 10px; border-radius: 6px; cursor: pointer; min-height: 28px; }
+.ps-row[aria-selected="true"] { background: #f0fdfa; color: #0f766e; }
+.ps-row .ps-sub { display: block; color: #78716c; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-action { color: #0d9488; border-top: 1px solid #f5f5f4; }
+@media (prefers-color-scheme: dark) {
+  .ps-list { background: #1c1917; border-color: #44403c; color: #fafaf9; }
+  .ps-row[aria-selected="true"] { background: #134e4a; color: #5eead4; }
+  .ps-row .ps-sub { color: #a8a29e; }
+  .ps-action { color: #2dd4bf; border-top-color: #292524; }
+}
