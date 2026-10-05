@@ -6,11 +6,15 @@ import { isSupportedUrl } from './useActiveTab';
 // Mocking approach (b): wxt storage/esbuild cannot load under jsdom, so '@/lib/cache' is
 // stubbed with in-memory no-ops and `wxt/browser` is mocked.
 let tokenCb: ((t: string | null) => void) | undefined;
-const cacheStub = vi.hoisted(() => ({ prompts: [] as unknown[] }));
+const cacheStub = vi.hoisted(() => ({
+  prompts: [] as unknown[],
+  pending: null as { title: string; content: string } | null,
+  pendingCb: undefined as ((p: unknown) => void) | undefined,
+}));
 vi.mock('@/lib/cache', () => ({
   getPrompts: vi.fn(async () => ({ prompts: cacheStub.prompts, syncedAt: 0 })),
-  takePendingSave: vi.fn(async () => null),
-  watchPendingSave: vi.fn(() => () => {}),
+  takePendingSave: vi.fn(async () => { const v = cacheStub.pending; cacheStub.pending = null; return v; }),
+  watchPendingSave: vi.fn((cb: (p: unknown) => void) => { cacheStub.pendingCb = cb; return () => {}; }),
   watchPrompts: vi.fn(() => () => {}),
   watchToken: vi.fn((cb: (t: string | null) => void) => { tokenCb = cb; return () => {}; }),
 }));
@@ -31,6 +35,7 @@ function mockBackground(handlers: Record<string, (m: any) => unknown>) {
 
 beforeEach(() => {
   cacheStub.prompts = [];
+  cacheStub.pending = null;
   Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
 });
 afterEach(cleanup);
@@ -143,5 +148,20 @@ describe('App', () => {
     render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
     expect(await screen.findByRole('button', { name: /connect account/i })).toBeTruthy();
     expect(screen.queryByText('Loading…')).toBeNull();
+  });
+
+  it('a new prefill while the save form is open replaces the form contents', async () => {
+    mockBackground({ getPrompts: () => ({ ok: true, data: { prompts: [], signedIn: true } }) });
+    render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
+    await screen.findByRole('button', { name: /new prompt/i });
+    const push = async (p: { title: string; content: string }) => {
+      cacheStub.pending = p;
+      await act(async () => { cacheStub.pendingCb!(p); });
+    };
+    await push({ title: 'First', content: 'first selection' });
+    await waitFor(() => expect((screen.getByLabelText(/content/i) as HTMLTextAreaElement).value).toBe('first selection'));
+    await push({ title: 'Second', content: 'second selection' });
+    await waitFor(() => expect((screen.getByLabelText(/content/i) as HTMLTextAreaElement).value).toBe('second selection'));
+    expect((screen.getByLabelText(/title/i) as HTMLInputElement).value).toBe('Second');
   });
 });

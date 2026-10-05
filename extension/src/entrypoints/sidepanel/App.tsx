@@ -17,7 +17,10 @@ async function send<T>(msg: Msg): Promise<MsgResult<T>> {
     return { ok: false, code: 'internal', message: INTERNAL };
   }
 }
-type View = { kind: 'list' } | { kind: 'save'; initial: PendingSave };
+type View = { kind: 'list' } | { kind: 'save'; initial: PendingSave; key: number };
+let formKey = 0;
+/** Each prefill gets a fresh key so SaveForm remounts with the new values instead of keeping old state. */
+const saveView = (initial: PendingSave): View => ({ kind: 'save', initial, key: ++formKey });
 
 const RETRY_MS = 3000;
 async function sendWithRetry<T>(msg: Msg): Promise<MsgResult<T>> {
@@ -64,11 +67,11 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
 
   useEffect(() => {
     void load();
-    void takePendingSave().then((p) => p !== null && setView({ kind: 'save', initial: p }));
+    void takePendingSave().then((p) => p !== null && setView(saveView(p)));
     const offs = [
       watchPrompts(setPrompts),
       watchToken((t) => { setSignedIn(t !== null); if (t !== null) setNeedsReconnect(false); }),
-      watchPendingSave((p) => { if (p !== null) void takePendingSave().then((v) => v !== null && setView({ kind: 'save', initial: v })); }),
+      watchPendingSave((p) => { if (p !== null) void takePendingSave().then((v) => v !== null && setView(saveView(v))); }),
     ];
     return () => offs.forEach((off) => off());
   }, [load]);
@@ -98,7 +101,7 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
     // Ask the page for its draft via the content script's adapter.
     const r = await browser.tabs.sendMessage(activeTab.id!, { type: 'ps-read-draft' }).catch(() => null) as { draft?: string } | null;
     const draft = r?.draft ?? '';
-    setView({ kind: 'save', initial: { title: draft.split('\n')[0]?.slice(0, 80) ?? '', content: draft } });
+    setView(saveView({ title: draft.split('\n')[0]?.slice(0, 80) ?? '', content: draft }));
   }
 
   if (signedIn === null) return <p className="p-4 text-sm text-stone-500">Loading…</p>;
@@ -122,6 +125,7 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
       <main className="p-4">
         <h1 className="mb-3 text-lg font-semibold">Save prompt</h1>
         <SaveForm
+          key={view.key}
           initial={view.initial}
           onCancel={() => setView({ kind: 'list' })}
           onSave={async (v) => {
@@ -146,7 +150,7 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
       <input type="search" aria-label="Search prompts" placeholder="Search prompts" value={query} onChange={(e) => setQuery(e.target.value)}
         className="min-h-11 w-full rounded-lg border border-stone-300 p-2 text-sm transition-colors duration-150 ease-out dark:border-stone-600 dark:bg-stone-900 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none" />
       <div className="flex gap-2">
-        <button onClick={() => setView({ kind: 'save', initial: { title: '', content: '' } })} className="min-h-11 flex-1 rounded-lg bg-teal-600 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-teal-700 focus-visible:ring-2">New prompt</button>
+        <button onClick={() => setView(saveView({ title: '', content: '' }))} className="min-h-11 flex-1 rounded-lg bg-teal-600 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-teal-700 focus-visible:ring-2">New prompt</button>
         {canInsert && (
           <button onClick={() => void saveDraftFromTab()} className="min-h-11 flex-1 rounded-lg border border-stone-300 text-sm transition-colors duration-150 ease-out hover:bg-stone-100 focus-visible:ring-2">Save current draft</button>
         )}
