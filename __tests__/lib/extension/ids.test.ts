@@ -35,4 +35,17 @@ describe('extension ids', () => {
     );
     expect(isAllowedExtensionOrigin(null)).toBe(false);
   });
+  it('"*" allows any well-formed extension id, but nothing malformed', () => {
+    process.env['NEXT_PUBLIC_EXTENSION_IDS'] = '*';
+    expect(isAllowedExtensionId('coclcgbalhmalehigbkflhaocjieklfe')).toBe(true);
+    expect(isAllowedExtensionId('ponmlkjihgfedcbaponmlkjihgfedcba')).toBe(true);
+    expect(isAllowedExtensionId('bogus')).toBe(false);
+    expect(isAllowedExtensionId('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')).toBe(false); // ids use a-p only
+    expect(isAllowedExtensionId('*')).toBe(false);
+    expect(isAllowedExtensionId(null)).toBe(false);
+    expect(isAllowedExtensionOrigin('chrome-extension://coclcgbalhmalehigbkflhaocjieklfe')).toBe(
+      true
+    );
+    expect(isAllowedExtensionOrigin('https://evil.example')).toBe(false);
+  });
 });

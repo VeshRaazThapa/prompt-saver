@@ -88,6 +88,9 @@ npm run dev
 The development build is unpacked and ready to load into Chrome. Configuration
 requires the web app's `NEXT_PUBLIC_EXTENSION_IDS` environment variable to
 contain the extension's ID (visible in `chrome://extensions/` when unpacked).
+Set it to `*` to allow any well-formed extension ID. That's useful while unpacked IDs
+change, but any extension can then ask a signed-in user to connect (the connect page
+shows the requesting ID), so use an explicit list in production.
 
 ### API
 

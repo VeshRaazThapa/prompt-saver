@@ -81,6 +81,10 @@ export function ConnectPanel({
         Allow the Prompt Saver extension to read and save prompts in <strong>{email}</strong>
         &apos;s library. You can disconnect any time from Settings.
       </p>
+      <p className="text-sm text-stone-500">
+        Extension ID: <code className="font-mono text-stone-700">{extId}</code>. It should match the
+        ID shown for Prompt Saver in chrome://extensions.
+      </p>
       {state === 'error' && <p className="text-red-700">{error}</p>}
       <Button onClick={() => void connect()} isLoading={state === 'working'}>
         {state === 'working' ? 'Connecting…' : 'Connect'}

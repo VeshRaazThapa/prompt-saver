@@ -6,6 +6,11 @@ jest.mock('@/lib/actions/extension', () => ({ connectExtensionAction: jest.fn() 
 jest.mock('@/lib/actions/tokens', () => ({ revokeTokenAction: jest.fn() }));
 
 describe('ConnectPanel', () => {
+  it('shows the requesting extension id so the user can verify it', () => {
+    render(<ConnectPanel extId="coclcgbalhmalehigbkflhaocjieklfe" email="a@b.c" />);
+    expect(screen.getByText('coclcgbalhmalehigbkflhaocjieklfe')).toBeInTheDocument();
+  });
+
   it('shows the error state instead of hanging on Connecting… when the action rejects', async () => {
     jest.mocked(connectExtensionAction).mockRejectedValue(new Error('network down'));
     render(<ConnectPanel extId="abc" email="a@b.c" />);
