@@ -40,20 +40,28 @@ export function ConnectPanel({
 
   async function connect(): Promise<void> {
     setState('working');
+    try {
+      setState(await runConnect());
+    } catch {
+      // A rejected server action (network drop, deploy mid-request) must not leave "Connecting…".
+      setError('Something went wrong. Please try again.');
+      setState('error');
+    }
+  }
+
+  async function runConnect(): Promise<State> {
     const res = await connectExtensionAction(extId);
     if (!res.ok) {
       setError(res.error);
-      setState('error');
-      return;
+      return 'error';
     }
     const rt = runtime();
     const delivered = rt !== undefined && (await sendToken(rt, extId, res.data.token));
     if (!delivered) {
       await revokeTokenAction(res.data.tokenId);
-      setState('no-extension');
-      return;
+      return 'no-extension';
     }
-    setState('done');
+    return 'done';
   }
 
   if (state === 'done') {
