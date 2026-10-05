@@ -164,4 +164,15 @@ describe('App', () => {
     await waitFor(() => expect((screen.getByLabelText(/content/i) as HTMLTextAreaElement).value).toBe('second selection'));
     expect((screen.getByLabelText(/title/i) as HTMLInputElement).value).toBe('Second');
   });
+
+  it('Insert that finds no chat box copies from the panel (which has focus) instead', async () => {
+    mockBackground({
+      getPrompts: () => ({ ok: true, data: { prompts: [P('a')], signedIn: true } }),
+      insertIntoTab: () => ({ ok: false, code: 'no_editor', message: "Couldn't find the chat box on this page." }),
+    });
+    render(<App activeTab={{ id: 9, url: 'https://chatgpt.com/codex' }} />);
+    fireEvent.click(await screen.findByRole('button', { name: /insert title a/i }));
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('body a'));
+    expect(await screen.findByText(/Copied/)).toBeTruthy();
+  });
 });

@@ -87,7 +87,14 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
 
   async function insert(p: ExtPrompt) {
     const r = track(await send({ type: 'insertIntoTab', tabId: activeTab.id!, text: p.content }));
-    if (!r.ok) setNotice(r.message);
+    if (r.ok) return;
+    // The tab couldn't insert (or couldn't copy: its document isn't focused while the panel is).
+    // The panel has focus and a fresh click, so copy here.
+    if (r.code === 'no_editor' && (await navigator.clipboard.writeText(p.content).then(() => true, () => false))) {
+      setNotice('Copied — paste it into the chat box');
+      return;
+    }
+    setNotice(r.message);
   }
   async function copy(p: ExtPrompt) {
     await navigator.clipboard.writeText(p.content);
