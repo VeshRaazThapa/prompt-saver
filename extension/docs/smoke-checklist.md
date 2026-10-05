@@ -10,6 +10,7 @@ For each site — claude.ai, chatgpt.com, chatgpt.com/codex, gemini.google.com:
 - [ ] Panel Insert puts text in the chat box; Copy works
 - [ ] Select text → right-click "Save to Prompt Saver" → panel form prefilled → Save → appears in list and on the website
 - [ ] If an editor selector failed, fix it in `src/sites/<site>.ts` and re-run `npm test`
+- [ ] chatgpt.com/codex: confirm the task input is picked; if not, add its selector first in src/sites/chatgpt.ts
 
 Account:
 - [ ] Revoke the "Chrome extension" token in website Settings → panel shows Reconnect on next action
