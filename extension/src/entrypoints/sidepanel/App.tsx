@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ExtPrompt, Msg, MsgResult, PendingSave } from '@/lib/types';
-import { takePendingSave, watchPendingSave, watchPrompts, watchToken } from '@/lib/cache';
+import { getPrompts as readCachedPrompts, takePendingSave, watchPendingSave, watchPrompts, watchToken } from '@/lib/cache';
 import { filterPrompts } from '@/picker/filter';
 import { SITE_BASE } from '@/lib/config';
 import { PromptCard } from './PromptCard';
 import { SaveForm } from './SaveForm';
 import { isSupportedUrl, type ActiveTab } from './useActiveTab';
 
-const send = <T,>(msg: Msg): Promise<MsgResult<T>> => browser.runtime.sendMessage(msg);
+const INTERNAL = 'Something went wrong. Please try again.';
+/** Never rejects: a missing or crashed worker becomes an internal error result. */
+async function send<T>(msg: Msg): Promise<MsgResult<T>> {
+  try {
+    const r = (await browser.runtime.sendMessage(msg)) as MsgResult<T> | undefined;
+    return r ?? { ok: false, code: 'internal', message: INTERNAL };
+  } catch {
+    return { ok: false, code: 'internal', message: INTERNAL };
+  }
+}
 type View = { kind: 'list' } | { kind: 'save'; initial: PendingSave };
 
 const RETRY_MS = 3000;
@@ -40,6 +49,16 @@ export function App({ activeTab }: { activeTab: ActiveTab }) {
     } else if (r.code === 'unauthorized') {
       setSignedIn(false);
       setNeedsReconnect(true);
+    } else {
+      // Any other failure: leave Loading, keep whatever list the cache watcher delivers, explain why.
+      const status = await send<{ signedIn: boolean }>({ type: 'getStatus' });
+      const signedInNow = status.ok && status.data.signedIn;
+      if (signedInNow) {
+        const cached = await readCachedPrompts().catch(() => null);
+        if (cached !== null) setPrompts(cached.prompts);
+      }
+      setSignedIn(signedInNow);
+      setNotice(r.message);
     }
   }, []);
 

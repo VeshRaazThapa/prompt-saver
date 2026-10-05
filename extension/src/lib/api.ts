@@ -32,7 +32,12 @@ export function createApi(token: string, fetchImpl: typeof fetch = fetch) {
       throw new ApiError('network', "Couldn't reach Prompt Saver. Check your connection.");
     }
     if (!r.ok) throw await toError(r);
-    return (await r.json()) as T;
+    try {
+      return (await r.json()) as T;
+    } catch {
+      // A 2xx that isn't JSON is a captive portal or proxy page, not our API: treat it as offline.
+      throw new ApiError('network', "Couldn't reach Prompt Saver. Check your connection.");
+    }
   }
   return {
     list: async (q = ''): Promise<ExtPrompt[]> =>

@@ -6,7 +6,9 @@ type Route = (msg: Msg, sender?: { tab?: { id?: number } }) => Promise<MsgResult
 /** Returns true so Chrome keeps the reply channel open for the async sendResponse. */
 export function makeMessageListener(route: Route) {
   return (msg: Msg, sender: Sender, sendResponse: (r: unknown) => void): boolean => {
-    void route(msg, sender).then(sendResponse);
+    void route(msg, sender)
+      .catch((): MsgResult => ({ ok: false, code: 'internal', message: 'Something went wrong. Please try again.' }))
+      .then(sendResponse);
     return true;
   };
 }

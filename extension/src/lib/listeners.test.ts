@@ -13,6 +13,14 @@ describe('makeMessageListener', () => {
     expect(route).toHaveBeenCalledWith({ type: 'getStatus' }, { tab: { id: 2 } });
     expect(send).toHaveBeenCalledWith({ ok: true, data: 1 });
   });
+
+  it('always answers: a rejected route becomes an internal error response', async () => {
+    const route = vi.fn().mockRejectedValue(new Error('storage exploded'));
+    const send = vi.fn();
+    expect(makeMessageListener(route)({ type: 'getPrompts' }, {}, send)).toBe(true);
+    await flush();
+    expect(send).toHaveBeenCalledWith({ ok: false, code: 'internal', message: 'Something went wrong. Please try again.' });
+  });
 });
 
 describe('makeExternalListener', () => {

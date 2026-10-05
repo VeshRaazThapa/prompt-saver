@@ -43,4 +43,9 @@ describe('api client', () => {
     const html = vi.fn().mockResolvedValue(new Response('<html>', { status: 502 }));
     await expect(createApi('t', html).list()).rejects.toBeInstanceOf(ApiError);
   });
+
+  it('maps a 2xx with a non-JSON body (captive portal, proxy page) to network', async () => {
+    const portal = vi.fn().mockResolvedValue(new Response('<html>Sign in to Wi-Fi</html>', { status: 200, headers: { 'Content-Type': 'text/html' } }));
+    await expect(createApi('t', portal).list()).rejects.toMatchObject({ name: 'ApiError', code: 'network' });
+  });
 });

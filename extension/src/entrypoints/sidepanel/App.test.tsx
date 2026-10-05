@@ -6,7 +6,9 @@ import { isSupportedUrl } from './useActiveTab';
 // Mocking approach (b): wxt storage/esbuild cannot load under jsdom, so '@/lib/cache' is
 // stubbed with in-memory no-ops and `wxt/browser` is mocked.
 let tokenCb: ((t: string | null) => void) | undefined;
+const cacheStub = vi.hoisted(() => ({ prompts: [] as unknown[] }));
 vi.mock('@/lib/cache', () => ({
+  getPrompts: vi.fn(async () => ({ prompts: cacheStub.prompts, syncedAt: 0 })),
   takePendingSave: vi.fn(async () => null),
   watchPendingSave: vi.fn(() => () => {}),
   watchPrompts: vi.fn(() => () => {}),
@@ -28,6 +30,7 @@ function mockBackground(handlers: Record<string, (m: any) => unknown>) {
 }
 
 beforeEach(() => {
+  cacheStub.prompts = [];
   Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
 });
 afterEach(cleanup);
@@ -109,5 +112,36 @@ describe('App', () => {
     act(() => tokenCb!(null));
     expect(await screen.findByRole('button', { name: /reconnect/i })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /connect account/i })).toBeNull();
+  });
+
+  it('a non-401 getPrompts failure is not stuck on Loading: shows the list and the error', async () => {
+    mockBackground({
+      getPrompts: () => ({ ok: false, code: 'internal', message: 'Something went wrong. Please try again.' }),
+      getStatus: () => ({ ok: true, data: { signedIn: true } }),
+    });
+    cacheStub.prompts = [P('cached')];
+    render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
+    expect(await screen.findByText('Something went wrong. Please try again.')).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 3, name: 'Title cached' })).toBeTruthy();
+    expect(screen.queryByText('Loading…')).toBeNull();
+    expect(screen.getByRole('button', { name: /new prompt/i })).toBeTruthy();
+  });
+
+  it('a non-401 failure when getStatus also fails falls back to signed out', async () => {
+    mockBackground({
+      getPrompts: () => ({ ok: false, code: 'internal', message: 'boom' }),
+      getStatus: () => { throw new Error('no receiver'); },
+    });
+    render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
+    expect(await screen.findByRole('button', { name: /connect account/i })).toBeTruthy();
+    expect(screen.queryByText('Loading…')).toBeNull();
+  });
+
+  it('sendMessage rejecting (worker unavailable) is not stuck on Loading', async () => {
+    mockBackground({});
+    stub.browser.runtime.sendMessage = vi.fn().mockRejectedValue(new Error('Could not establish connection'));
+    render(<App activeTab={{ id: 1, url: 'https://claude.ai/' }} />);
+    expect(await screen.findByRole('button', { name: /connect account/i })).toBeTruthy();
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 });
