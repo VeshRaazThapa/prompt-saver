@@ -19,3 +19,5 @@ export function isAllowedExtensionOrigin(origin: string | null): boolean {
   if (origin === null || !origin.startsWith(prefix)) return false;
   return isAllowedExtensionId(origin.slice(prefix.length));
 }
+
+export const EXTENSION_TOKEN_NAME = 'Chrome extension';
