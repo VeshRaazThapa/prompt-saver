@@ -65,11 +65,36 @@ export function ConnectPanel({
   }
 
   if (state === 'done') {
-    return <p className="mt-4 text-teal-700">Connected — you can close this tab.</p>;
+    return (
+      <div className="mt-4 space-y-3" role="status">
+        <p className="flex items-center gap-2 font-medium text-teal-700">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m5 12 5 5L20 7" />
+          </svg>
+          Connected — you can close this tab.
+        </p>
+        <p className="text-stone-600">
+          Open Claude, ChatGPT, Codex or Gemini and type{' '}
+          <kbd className="rounded border border-stone-200 bg-stone-50 px-1.5 font-mono text-sm text-stone-700">
+            //
+          </kbd>{' '}
+          in the chat box to insert a prompt.
+        </p>
+      </div>
+    );
   }
   if (state === 'no-extension') {
     return (
-      <p className="mt-4 text-stone-600">
+      <p className="mt-4 rounded-md border-l-2 border-amber-600 bg-amber-50 px-3 py-2 text-stone-700">
         We couldn&apos;t reach the extension. Make sure Prompt Saver is installed and enabled in
         Chrome, then try again from the extension.
       </p>
@@ -85,7 +110,14 @@ export function ConnectPanel({
         Extension ID: <code className="font-mono text-stone-700">{extId}</code>. It should match the
         ID shown for Prompt Saver in chrome://extensions.
       </p>
-      {state === 'error' && <p className="text-red-700">{error}</p>}
+      {state === 'error' && (
+        <p
+          role="alert"
+          className="rounded-md border-l-2 border-red-600 bg-red-50 px-3 py-2 text-red-800"
+        >
+          {error}
+        </p>
+      )}
       <Button onClick={() => void connect()} isLoading={state === 'working'}>
         {state === 'working' ? 'Connecting…' : 'Connect'}
       </Button>

@@ -1,4 +1,6 @@
 import React from 'react';
+import Link from 'next/link';
+import { BrandMark } from '@/components/BrandMark';
 
 export const metadata = { title: 'Privacy Policy — Prompt Saver' };
 
@@ -6,9 +8,16 @@ const CONTACT = 'thapahimal777@gmail.com';
 
 export default function PrivacyPage(): React.ReactElement {
   return (
-    <main className="mx-auto max-w-2xl bg-stone-50 px-4 py-12 font-body text-stone-800">
-      <h1 className="font-display text-4xl text-stone-900">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-stone-500">Last updated: 5 October 2026</p>
+    <main className="mx-auto max-w-2xl px-4 py-12 font-body leading-relaxed text-stone-800">
+      <Link
+        href="/"
+        className="inline-flex min-h-11 items-center gap-2.5 rounded-md transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+      >
+        <BrandMark />
+        <span className="font-display text-2xl text-stone-900">Prompt Saver</span>
+      </Link>
+      <h1 className="mt-10 font-display text-4xl text-stone-900">Privacy Policy</h1>
+      <p className="mt-2 text-sm text-stone-500">Last updated: 9 October 2026</p>
 
       <h2 className="mt-8 text-xl font-semibold">What we store</h2>
       <p className="mt-2">
@@ -29,6 +38,18 @@ export default function PrivacyPage(): React.ReactElement {
 
       <h2 className="mt-8 text-xl font-semibold">What we don&apos;t do</h2>
       <p className="mt-2">We do not sell your data, show ads, or share your prompts with anyone.</p>
+      <p className="mt-2">
+        The use of information received from the extension adheres to the{' '}
+        <a
+          className="text-teal-700 underline"
+          href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq"
+        >
+          Chrome Web Store User Data Policy
+        </a>
+        , including the Limited Use requirements: data is used only to provide the prompt library
+        you see, never for advertising, credit decisions or to train AI models, and no human reads
+        it except to fix a problem you report or where the law requires.
+      </p>
 
       <h2 className="mt-8 text-xl font-semibold">Deleting your data</h2>
       <p className="mt-2">

@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { isAllowedExtensionId } from '@/lib/extension/ids';
 import { ConnectPanel } from './ConnectPanel';
+import { BrandMark } from '@/components/BrandMark';
 
 export const metadata = { title: 'Connect extension — Prompt Saver' };
 
@@ -21,7 +22,13 @@ export default async function ConnectPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-stone-50 px-4 font-body">
       <div className="w-full max-w-md rounded-xl border border-stone-200 bg-white p-8 shadow-sm">
-        <h1 className="font-display text-3xl text-stone-900">Connect Chrome extension</h1>
+        <div className="flex items-center gap-2.5">
+          <BrandMark />
+          <span className="font-display text-2xl text-stone-900">Prompt Saver</span>
+        </div>
+        <h1 className="mt-8 font-display text-[30px] leading-tight text-stone-900">
+          Connect the Chrome extension
+        </h1>
         {ext !== undefined && isAllowedExtensionId(ext) ? (
           <ConnectPanel extId={ext} email={session.user?.email ?? ''} />
         ) : (
