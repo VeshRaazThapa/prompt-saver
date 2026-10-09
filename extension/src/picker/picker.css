@@ -1,14 +1,42 @@
 :host { all: initial; }
-.ps-list { position: fixed; z-index: 2147483647; width: 360px; max-height: 360px; overflow-y: auto;
-  background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; box-shadow: 0 8px 24px rgba(28,25,23,.15);
-  font: 14px/1.4 'DM Sans', system-ui, sans-serif; color: #1c1917; padding: 4px; }
-.ps-row { padding: 8px 10px; border-radius: 6px; cursor: pointer; min-height: 28px; }
-.ps-row[aria-selected="true"] { background: #f0fdfa; color: #0f766e; }
-.ps-row .ps-sub { display: block; color: #78716c; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ps-action { color: #0d9488; border-top: 1px solid #f5f5f4; }
+.ps-panel { position: fixed; z-index: 2147483647; width: 384px; max-width: calc(100vw - 16px);
+  background: #fff; border: 1px solid #e7e5e4; border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(28,25,23,.06), 0 12px 32px rgba(28,25,23,.16);
+  font: 14px/1.4 'DM Sans', ui-sans-serif, system-ui, sans-serif; color: #1c1917; overflow: hidden;
+  animation: ps-in 120ms ease-out; }
+@keyframes ps-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.ps-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; font-size: 12px; font-weight: 600;
+  color: #57534e; letter-spacing: .01em; border-bottom: 1px solid #f5f5f4; }
+.ps-query { margin-left: auto; font: 12px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #0d9488; max-width: 50%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-list { max-height: 320px; overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
+.ps-row { display: block; padding: 8px 10px; border-radius: 8px; cursor: pointer; min-height: 28px; }
+.ps-title { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-fav .ps-title::after { content: ' ★'; color: #0d9488; font-weight: 400; }
+.ps-sub { display: block; margin-top: 2px; color: #78716c; font: 12px/1.45 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-row[aria-selected="true"] { background: #f0fdfa; box-shadow: inset 2px 0 0 #0d9488; }
+.ps-row[aria-selected="true"] .ps-title { color: #115e59; }
+.ps-action { color: #0f766e; font-weight: 500; }
+.ps-action .ps-title { font-weight: 500; }
+.ps-row.ps-action { margin-top: 2px; }
+.ps-row:not(.ps-action) + .ps-action { border-top: 1px solid #f5f5f4; border-radius: 0 0 8px 8px; }
+.ps-empty { padding: 10px; color: #78716c; font-size: 13px; }
+.ps-foot { display: flex; gap: 14px; padding: 7px 12px; border-top: 1px solid #f5f5f4; background: #fafaf9;
+  font-size: 11px; color: #78716c; }
+.ps-foot kbd { font: 10px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 1px 4px; margin-right: 2px; border-radius: 4px;
+  border: 1px solid #e7e5e4; background: #fff; color: #57534e; }
 @media (prefers-color-scheme: dark) {
-  .ps-list { background: #1c1917; border-color: #44403c; color: #fafaf9; }
-  .ps-row[aria-selected="true"] { background: #134e4a; color: #5eead4; }
-  .ps-row .ps-sub { color: #a8a29e; }
-  .ps-action { color: #2dd4bf; border-top-color: #292524; }
+  .ps-panel { background: #1c1917; border-color: #44403c; color: #e7e5e4; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+  .ps-head { color: #a8a29e; border-bottom-color: #292524; }
+  .ps-query { color: #2dd4bf; }
+  .ps-sub, .ps-empty { color: #a8a29e; }
+  .ps-row[aria-selected="true"] { background: #042f2e; box-shadow: inset 2px 0 0 #2dd4bf; }
+  .ps-row[aria-selected="true"] .ps-title { color: #5eead4; }
+  .ps-fav .ps-title::after { color: #2dd4bf; }
+  .ps-action { color: #2dd4bf; }
+  .ps-row:not(.ps-action) + .ps-action { border-top-color: #292524; }
+  .ps-foot { background: #171412; border-top-color: #292524; color: #a8a29e; }
+  .ps-foot kbd { background: #292524; border-color: #44403c; color: #d6d3d1; }
 }
+@media (prefers-reduced-motion: reduce) { .ps-panel { animation: none; } }

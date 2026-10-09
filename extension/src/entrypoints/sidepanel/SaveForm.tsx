@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { AlertIcon } from './icons';
+import { btnGhost, btnPrimary, field } from './ui';
 
 export function SaveForm(props: {
   initial: { title: string; content: string };
@@ -10,7 +12,7 @@ export function SaveForm(props: {
   const [tags, setTags] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const field = 'mt-1 w-full rounded-lg border border-stone-300 bg-white p-2 text-sm dark:border-stone-600 dark:bg-stone-900 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none';
+  const label = 'block text-[13px] font-medium text-stone-700 dark:text-stone-300';
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,14 +23,36 @@ export function SaveForm(props: {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <label className="block text-sm">Title<input className={field} value={title} maxLength={200} required onChange={(e) => setTitle(e.target.value)} /></label>
-      <label className="block text-sm">Content<textarea className={`${field} h-48 font-mono`} value={content} required onChange={(e) => setContent(e.target.value)} /></label>
-      <label className="block text-sm">Tags (comma-separated)<input className={field} value={tags} onChange={(e) => setTags(e.target.value)} /></label>
-      {error !== null && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <div className="flex gap-2">
-        <button type="submit" disabled={busy} className="min-h-11 rounded-lg bg-teal-600 px-4 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-teal-700 focus-visible:ring-2">{busy ? 'Saving…' : 'Save'}</button>
-        <button type="button" onClick={props.onCancel} className="min-h-11 rounded-lg px-4 text-sm text-stone-600 transition-colors duration-150 ease-out hover:bg-stone-100 focus-visible:ring-2">Cancel</button>
+    <form
+      onSubmit={submit}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') props.onCancel();
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.requestSubmit();
+      }}
+      className="space-y-4"
+    >
+      <label className={label}>
+        Title
+        <input className={`${field} mt-1.5 min-h-11`} value={title} maxLength={200} required autoFocus={title === ''} placeholder="e.g. Code review checklist" onChange={(e) => setTitle(e.target.value)} />
+      </label>
+      <label className={label}>
+        Content
+        <textarea className={`${field} mt-1.5 h-56 resize-y py-2.5 font-mono text-[13px] leading-relaxed`} value={content} required autoFocus={title !== '' && content === ''} placeholder="Write or paste your prompt…" onChange={(e) => setContent(e.target.value)} />
+      </label>
+      <label className={label}>
+        Tags <span className="font-normal text-stone-400 dark:text-stone-500">(comma-separated)</span>
+        <input className={`${field} mt-1.5 min-h-11`} value={tags} placeholder="review, typescript" onChange={(e) => setTags(e.target.value)} />
+      </label>
+      {error !== null && (
+        <p role="alert" className="flex items-start gap-2 rounded-lg border-l-2 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-300">
+          <AlertIcon className="mt-0.5 size-4 shrink-0" />
+          {error}
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <button type="submit" disabled={busy} className={btnPrimary}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" onClick={props.onCancel} className={`${btnGhost} px-4`}>Cancel</button>
+        <span className="ml-auto hidden text-xs text-stone-400 min-[340px]:inline dark:text-stone-500">⌘↵ to save</span>
       </div>
     </form>
   );

@@ -12,7 +12,7 @@ function make(state: { prompts: ReturnType<typeof p>[]; signedIn: boolean }) {
   const picker = createPicker({ getState: () => state, onPick, onSaveDraft, onSignIn, root });
   return { picker, onPick, onSaveDraft, onSignIn, root };
 }
-const rows = (root: HTMLElement) => Array.from(root.shadowRoot?.querySelectorAll('[role="option"]') ?? root.querySelectorAll('[role="option"]')).map((r) => r.textContent);
+const rows = (root: HTMLElement) => Array.from((root.shadowRoot ?? root).querySelectorAll('[role="option"] .ps-title')).map((r) => r.textContent);
 
 describe('picker', () => {
   it('lists filtered prompts then the save-draft row; Enter picks the active row', () => {

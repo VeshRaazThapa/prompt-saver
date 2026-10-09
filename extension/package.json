@@ -10,32 +10,35 @@
     "postinstall": "wxt prepare",
     "test": "vitest run",
     "e2e": "node e2e/fixtures/build.mjs && WXT_OUT_DIR=.output-e2e WXT_API_BASE=http://localhost:4599 wxt build && playwright test",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "store-assets": "node e2e/fixtures/build.mjs && WXT_OUT_DIR=.output-e2e WXT_API_BASE=http://localhost:4599 wxt build && node store/capture.mjs",
+    "icons": "node brand/render.mjs"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.0.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "@fontsource/dm-sans": "^5.0.0",
-    "@fontsource/jetbrains-mono": "^5.0.0"
+    "react-dom": "^18.3.0"
   },
   "devDependencies": {
-    "wxt": "^0.20.0",
-    "@wxt-dev/module-react": "~1.1.5",
+    "@playwright/test": "^1.48.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
-    "typescript": "^5.3.3",
-    "vitest": "^3.0.0",
-    "vite": "^7.0.0",
-    "jsdom": "^25.0.0",
-    "@testing-library/react": "^16.0.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.0",
-    "@playwright/test": "^1.48.0",
+    "@wxt-dev/module-react": "~1.1.5",
     "esbuild": "^0.27.0",
-    "prosemirror-state": "^1.4.3",
-    "prosemirror-view": "^1.33.0",
+    "jsdom": "^25.0.0",
     "prosemirror-model": "^1.21.0",
     "prosemirror-schema-basic": "^1.2.2",
-    "quill": "^2.0.2"
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.33.0",
+    "quill": "^2.0.2",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.3.3",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0",
+    "wxt": "^0.20.0"
   }
 }
