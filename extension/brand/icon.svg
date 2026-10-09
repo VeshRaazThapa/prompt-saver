@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Store/extension icon: 96px artwork inside 16px transparent padding (Chrome Web Store guideline). -->
+  <defs>
+    <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1C1917" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="16" y="16" width="96" height="96" rx="24" fill="#0D9488" filter="url(#lift)"/>
+  <rect x="16" y="16" width="96" height="96" rx="24" fill="none" stroke="#0F766E" stroke-width="1.5"/>
+  <path d="M43 34a5 5 0 0 1 5-5h32a5 5 0 0 1 5 5v61.5a2 2 0 0 1-3.2 1.6L64 84 46.2 97.1A2 2 0 0 1 43 95.5z" fill="#FAFAF9"/>
+  <g stroke="#0D9488" stroke-width="7" stroke-linecap="round">
+    <line x1="55" y1="68" x2="62" y2="44"/>
+    <line x1="66" y1="68" x2="73" y2="44"/>
+  </g>
+</svg>

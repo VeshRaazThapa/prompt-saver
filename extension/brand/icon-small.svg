@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Toolbar icon (16/32px): full-bleed, heavier strokes so the // survives at 16px. -->
+  <rect width="32" height="32" rx="8" fill="#0D9488"/>
+  <path d="M9 6.5a1.5 1.5 0 0 1 1.5-1.5h11a1.5 1.5 0 0 1 1.5 1.5V27l-7-5-7 5z" fill="#FAFAF9"/>
+  <g stroke="#0D9488" stroke-width="2.6" stroke-linecap="round">
+    <line x1="12.6" y1="17.5" x2="14.6" y2="10"/>
+    <line x1="17.4" y1="17.5" x2="19.4" y2="10"/>
+  </g>
+</svg>

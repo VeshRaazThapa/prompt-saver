@@ -23,6 +23,7 @@ export default defineConfig({
     externally_connectable: {
       matches: [`${API_BASE}/*`, ...(isDev ? ['http://localhost:3000/*'] : [])],
     },
-    action: { default_title: 'Prompt Saver' },
+    icons: { 16: 'icon/16.png', 32: 'icon/32.png', 48: 'icon/48.png', 128: 'icon/128.png' },
+    action: { default_title: 'Prompt Saver — type // in any chat box', default_icon: { 16: 'icon/16.png', 32: 'icon/32.png' } },
   },
 });
