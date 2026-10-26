@@ -43,6 +43,7 @@ Privacy: the // check runs locally in your browser. Text is sent to Prompt Saver
 | `screenshot-5-dark.png` | Screenshot 5 — dark mode |
 | `promo-small-440x280.png` | Small promo tile (440×280) |
 | `promo-marquee-1400x560.png` | Marquee promo tile (1400×560, optional) |
+| `demo-picker.mp4` / `demo-picker.gif` | `//` picker demo for the website, README and launch posts (regenerate with `npm run store-demo`). The listing's promo video must be a YouTube link: upload the MP4 there first. |
 
 The chat page in the screenshots is a neutral mock (`store/chat-mock.html`) with sample prompts (`store/stub-data.mjs`). No third-party branding appears in any asset.
 

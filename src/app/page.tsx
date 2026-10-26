@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
+import { CHROME_WEB_STORE_URL, GITHUB_URL } from '@/lib/links';
 
 export default async function LandingPage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);
@@ -18,12 +19,20 @@ export default async function LandingPage(): Promise<React.ReactElement> {
           <Link href="/" className="font-display text-[22px] text-stone-900">
             Prompt Saver
           </Link>
-          <Link
-            href="/app"
-            className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-primary-hover"
-          >
-            Start Saving Prompts &rarr;
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={CHROME_WEB_STORE_URL}
+              className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-stone-600 transition-colors duration-150 ease-out hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 max-sm:hidden"
+            >
+              Chrome extension
+            </a>
+            <Link
+              href="/app"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-5 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Start Saving Prompts &rarr;
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -37,23 +46,47 @@ export default async function LandingPage(): Promise<React.ReactElement> {
           </h1>
           <p className="mt-4 max-w-[440px] text-lg leading-relaxed text-stone-500">
             Stop losing your best prompts in chat history. Save, version, and find any prompt in
-            seconds.
+            seconds &mdash; then type <kbd className="font-mono text-base text-stone-700">//</kbd>{' '}
+            in Claude, ChatGPT or Gemini to drop one into the chat.
           </p>
-          <Link
-            href="/app"
-            className="mt-7 inline-flex items-center gap-2 rounded-[10px] bg-primary px-7 py-3.5 text-base font-medium text-white shadow-[0_2px_8px_rgba(13,148,136,0.2)] transition-all duration-150 hover:-translate-y-0.5 hover:bg-primary-hover"
-          >
-            Start Saving Prompts
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
-          <p className="mt-3 text-[13px] text-stone-400">Sign in with Google.</p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              href="/app"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-primary px-7 py-3.5 text-base font-medium text-white shadow-[0_2px_8px_rgba(13,148,136,0.2)] transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Start Saving Prompts
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </Link>
+            <a
+              href={CHROME_WEB_STORE_URL}
+              className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-stone-300 bg-white px-7 py-3.5 text-base font-medium text-stone-900 transition-colors duration-150 ease-out hover:border-stone-400 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
+                />
+              </svg>
+              Add to Chrome
+            </a>
+          </div>
+          <p className="mt-3 text-[13px] text-stone-400">Free. Sign in with Google.</p>
         </div>
 
         {/* App Preview */}
@@ -117,6 +150,72 @@ export default async function LandingPage(): Promise<React.ReactElement> {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Extension */}
+      <section className="border-y border-stone-200 bg-white py-20">
+        <div className="mx-auto grid max-w-[1100px] items-center gap-12 px-6 md:grid-cols-[1fr_1.4fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+              Chrome extension
+            </p>
+            <h2 className="mt-3 font-display text-4xl text-stone-900 max-md:text-3xl">
+              Type <span className="font-mono text-primary">//</span> in any AI chat.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-stone-500">
+              Search your library from the chat box and press Enter to drop a prompt in. It never
+              sends for you, so you can tweak it first.
+            </p>
+            <ul className="mt-6 space-y-2.5 text-sm text-stone-600">
+              {[
+                'Works in Claude, ChatGPT and Gemini',
+                'Side panel with your whole library',
+                'Right-click any text to save it',
+                'Same library in Claude Code over MCP',
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2.5">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={CHROME_WEB_STORE_URL}
+              className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-stone-300 bg-white px-7 py-3.5 text-base font-medium text-stone-900 transition-colors duration-150 ease-out hover:border-stone-400 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
+                />
+              </svg>
+              Add to Chrome &mdash; it&rsquo;s free
+            </a>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-stone-200 shadow-[0_8px_32px_rgba(28,25,23,0.08)]">
+            <video
+              className="block h-auto w-full"
+              src="/demo/demo-picker.mp4"
+              poster="/demo/demo-picker-poster.jpg"
+              width={960}
+              height={600}
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-label="Typing // in an AI chat opens Prompt Saver; pressing Enter inserts the saved prompt"
+            />
           </div>
         </div>
       </section>
@@ -294,7 +393,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
                 </svg>
               ),
               title: 'Zero setup',
-              body: 'No API key to configure, no wizard to click through, nothing to install. Sign in with Google and start saving prompts. Literally.',
+              body: 'No API key to configure, no wizard to click through. Sign in with Google and start saving prompts \u2014 add the Chrome extension whenever you like.',
             },
           ].map((f) => (
             <div
@@ -314,7 +413,7 @@ export default async function LandingPage(): Promise<React.ReactElement> {
       </section>
 
       {/* Final CTA */}
-      <section className="bg-gradient-to-b from-stone-50 to-[#F0FDFA] py-20 text-center">
+      <section className="bg-gradient-to-b from-stone-50 to-[#F0FDFA] px-6 py-20 text-center">
         <h2 className="font-display text-[40px] text-stone-900 max-md:text-3xl">
           Your prompts deserve better
           <br />
@@ -323,26 +422,69 @@ export default async function LandingPage(): Promise<React.ReactElement> {
         <p className="mt-3 text-base text-stone-500">
           Start building your prompt library today. It takes 10 seconds.
         </p>
-        <Link
-          href="/app"
-          className="mt-7 inline-flex items-center gap-2 rounded-[10px] bg-primary px-8 py-4 text-base font-medium text-white shadow-[0_4px_16px_rgba(13,148,136,0.25)] transition-all duration-150 hover:-translate-y-0.5 hover:bg-primary-hover"
-        >
-          Start Saving Prompts
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
-            />
-          </svg>
-        </Link>
-        <p className="mt-3 text-[13px] text-stone-400">Sign in with Google to get started.</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/app"
+            className="inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-primary px-8 py-4 text-base font-medium text-white shadow-[0_4px_16px_rgba(13,148,136,0.25)] transition-all duration-150 ease-out hover:-translate-y-0.5 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Start Saving Prompts
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </Link>
+          <a
+            href={CHROME_WEB_STORE_URL}
+            className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-stone-300 bg-white px-8 py-4 text-base font-medium text-stone-900 transition-colors duration-150 ease-out hover:border-stone-400 hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <svg
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"
+              />
+            </svg>
+            Add to Chrome
+          </a>
+        </div>
+        <p className="mt-3 text-[13px] text-stone-400">Free. Sign in with Google to get started.</p>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-stone-200 py-8 text-center text-[13px] text-stone-400">
-        <p>Prompt Saver</p>
+        <nav className="flex flex-wrap items-center justify-center gap-x-4" aria-label="Footer">
+          <span>Prompt Saver</span>
+          <a
+            href={CHROME_WEB_STORE_URL}
+            className="inline-flex min-h-11 items-center rounded-md px-2 transition-colors duration-150 ease-out hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Chrome extension
+          </a>
+          <a
+            href={GITHUB_URL}
+            className="inline-flex min-h-11 items-center rounded-md px-2 transition-colors duration-150 ease-out hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            GitHub
+          </a>
+          <Link
+            href="/privacy"
+            className="inline-flex min-h-11 items-center rounded-md px-2 transition-colors duration-150 ease-out hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Privacy
+          </Link>
+        </nav>
       </footer>
     </div>
   );

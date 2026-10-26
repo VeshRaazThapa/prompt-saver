@@ -2,6 +2,10 @@
 
 **Live:** https://prompt-saver-two.vercel.app/
 
+**Chrome extension:** [Add to Chrome](https://chromewebstore.google.com/detail/phadmjhlepcflnjmbkobjigdflahhoko) — type `//` in Claude, ChatGPT or Gemini to insert a saved prompt.
+
+![Typing // in an AI chat opens the Prompt Saver picker; Enter inserts the prompt](extension/store/assets/demo-picker.gif)
+
 A prompt management tool for saving, versioning, and searching LLM prompts. Built with Next.js, Neon Postgres, and a warm stone/teal design system.
 
 ## Features (MVP - Phase 1)
