@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "online.promptsaver/prompt-saver",
+  "title": "Prompt Saver",
+  "description": "Your versioned prompt library: search, read, save and version prompts from Claude Code.",
+  "version": "1.0.0",
+  "websiteUrl": "https://promptsaver.online",
+  "repository": {
+    "url": "https://github.com/VeshRaazThapa/prompt-saver",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://promptsaver.online/api/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer token from Settings at https://promptsaver.online (format: Bearer ps_...)",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
