@@ -4,8 +4,8 @@
 **Summary (≤132):** Save, search and insert your best prompts in Claude, ChatGPT, Codex and Gemini. Type // in any chat box to insert.
 **Category:** Productivity → Tools
 **Language:** English
-**Privacy policy URL:** https://prompt-saver-two.vercel.app/privacy
-**Homepage URL:** https://prompt-saver-two.vercel.app/
+**Privacy policy URL:** https://promptsaver.online/privacy
+**Homepage URL:** https://promptsaver.online/
 
 **Description:**
 Stop rewriting prompts you already perfected.
@@ -15,7 +15,7 @@ Prompt Saver keeps your best prompts in one library and puts them one keystroke 
 • Type // in Claude, ChatGPT, Codex or Gemini to search your prompts, then press Enter to drop one into the chat box. Your message is never sent for you.
 • Open the side panel for your whole library: search, star favorites, insert or copy with one click.
 • Right-click any selected text → "Save to Prompt Saver", or save the draft you're typing.
-• Every prompt is versioned on prompt-saver-two.vercel.app, and the same library is available in Claude Code via MCP.
+• Every prompt is versioned on promptsaver.online, and the same library is available in Claude Code via MCP.
 • Light and dark themes, full keyboard support.
 
 Privacy: the // check runs locally in your browser. Text is sent to Prompt Saver only when you save a prompt. No ads, no tracking, nothing sold.
@@ -25,7 +25,7 @@ Privacy: the // check runs locally in your browser. Text is sent to Prompt Saver
 - sidePanel: the prompt library panel
 - contextMenus: "Save to Prompt Saver" on selected text
 - Host access (claude.ai, chatgpt.com, gemini.google.com): show the // picker and insert prompts into the chat box
-- Host access (prompt-saver-two.vercel.app): sync with your Prompt Saver account
+- Host access (prompt-saver-two.vercel.app): sync with your Prompt Saver account (the API host; the website is promptsaver.online)
 
 **Single purpose:** Save and insert AI prompts.
 **Remote code:** No. All JavaScript ships in the package.

@@ -4,7 +4,7 @@ Everything needed to put Prompt Saver (Chrome extension + web app + MCP server) 
 
 **Links**
 - Extension: https://chromewebstore.google.com/detail/phadmjhlepcflnjmbkobjigdflahhoko
-- Website: https://prompt-saver-two.vercel.app/
+- Website: https://promptsaver.online/
 - Source (MIT): https://github.com/VeshRaazThapa/prompt-saver
 
 Add `?ref=<channel>` (e.g. `?ref=hn`, `?ref=ph`, `?ref=reddit-claudeai`) to every website link you post so you can see which channel converts.
@@ -20,7 +20,7 @@ Big launches (Product Hunt, Hacker News) only happen once. Fix these first.
 | 1 | ✅ "Add to Chrome" on the homepage (nav, hero, extension section, final CTA, footer) | Done. |
 | 2 | ✅ Demo clip: `extension/store/assets/demo-picker.mp4` and `.gif` (`npm run store-demo` to re-record) | Done. Still to do: upload the MP4 to YouTube and add the link as the Chrome Web Store promo video. |
 | 3 | ✅ Demo GIF at the top of the GitHub README | Done. |
-| 4 | Decide on a custom domain (optional, ~$10/yr) | `prompt-saver-two.vercel.app` looks like a side project. If you switch, it needs a new extension version (host permission), `NEXTAUTH_URL`, the Google OAuth authorized domain and the privacy URL updated — so do it *before* launches, or not at all. |
+| 4 | ✅ Custom domain: https://promptsaver.online (GoDaddy, renews Nov 1, 2027) | Done. The extension API stays on `prompt-saver-two.vercel.app` so installed copies keep their permissions; the old host keeps serving. |
 | 5 | Ask the first users for a Chrome Web Store rating | Listings with 0 ratings convert poorly. Ask friends/colleagues who actually use it for an honest review. |
 
 ---
@@ -103,7 +103,7 @@ Rules first: most subs ban pure self-promotion. Read each sub's rules, use the "
 
 ## 4. MCP directories (developer audience, low competition)
 
-Submit the remote server `https://prompt-saver-two.vercel.app/api/mcp` (HTTP transport, Bearer token from Settings).
+Submit the remote server `https://promptsaver.online/api/mcp` (HTTP transport, Bearer token from Settings).
 
 - Official MCP Registry — registry.modelcontextprotocol.io
 - awesome-mcp-servers (GitHub, punkpeye) — open a PR

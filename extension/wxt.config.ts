@@ -2,6 +2,8 @@ import { defineConfig } from 'wxt';
 import tailwindcss from '@tailwindcss/vite';
 
 const API_BASE = process.env.WXT_API_BASE ?? 'https://prompt-saver-two.vercel.app';
+// Matches SITE_BASE in src/lib/config.ts. Only externally_connectable needs it, which adds no permission warning.
+const SITE_BASE = process.env.WXT_API_BASE ?? 'https://promptsaver.online';
 const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
@@ -21,7 +23,7 @@ export default defineConfig({
       `${API_BASE}/*`,
     ],
     externally_connectable: {
-      matches: [`${API_BASE}/*`, ...(isDev ? ['http://localhost:3000/*'] : [])],
+      matches: [...new Set([`${API_BASE}/*`, `${SITE_BASE}/*`]), ...(isDev ? ['http://localhost:3000/*'] : [])],
     },
     icons: { 16: 'icon/16.png', 32: 'icon/32.png', 48: 'icon/48.png', 128: 'icon/128.png' },
     action: { default_title: 'Prompt Saver — type // in any chat box', default_icon: { 16: 'icon/16.png', 32: 'icon/32.png' } },

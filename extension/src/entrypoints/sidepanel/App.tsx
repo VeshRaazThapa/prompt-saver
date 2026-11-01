@@ -125,7 +125,7 @@ function Welcome({ reconnect, onConnect }: { reconnect: boolean; onConnect: () =
         {reconnect ? 'Reconnect' : 'Connect account'}
       </button>
       <p className="mt-auto pt-8 text-xs leading-relaxed text-stone-400 dark:text-stone-500">
-        Prompts sync with your account at prompt-saver-two.vercel.app.{' '}
+        Prompts sync with your account at promptsaver.online.{' '}
         <a href={`${SITE_BASE}/privacy`} target="_blank" rel="noreferrer" className="underline decoration-stone-300 underline-offset-2 transition-colors duration-150 ease-out hover:text-stone-600 focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none dark:decoration-stone-600 dark:hover:text-stone-300">Privacy</a>
       </p>
     </main>

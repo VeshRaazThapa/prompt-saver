@@ -22,4 +22,4 @@ When the user says "deploy", run these steps:
 3. `git checkout <branch>`
 
 Vercel auto-deploys from `main`. No manual deploy step needed.
-Production URL: https://prompt-saver-two.vercel.app/
+Production URL: https://promptsaver.online/

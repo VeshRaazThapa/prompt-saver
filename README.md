@@ -1,6 +1,6 @@
 # Prompt Saver - LLM Prompt Intelligence Platform
 
-**Live:** https://prompt-saver-two.vercel.app/
+**Live:** https://promptsaver.online/
 
 **Chrome extension:** [Add to Chrome](https://chromewebstore.google.com/detail/phadmjhlepcflnjmbkobjigdflahhoko) — type `//` in Claude, ChatGPT or Gemini to insert a saved prompt.
 
@@ -23,7 +23,7 @@ without leaving the terminal.
 
 ### Connect
 
-1. Sign in at https://prompt-saver-two.vercel.app/, then click **Settings**
+1. Sign in at https://promptsaver.online/, then click **Settings**
    and generate a token. The raw token is shown exactly once — copy it
    immediately. Only its SHA-256 hash is stored, so a lost token can't be
    recovered; revoke it on the same page and create a new one.
@@ -32,7 +32,7 @@ without leaving the terminal.
 
    ```bash
    claude mcp add --transport http prompt-saver --scope user \
-     https://prompt-saver-two.vercel.app/api/mcp \
+     https://promptsaver.online/api/mcp \
      --header "Authorization: Bearer ps_..."
    ```
 
