@@ -212,3 +212,22 @@ Tag: @AnthropicAI, @OpenAI, @GoogleDeepMind only where genuinely relevant; reply
 | Visits by channel | Vercel Analytics, filtered by `ref` |
 
 Review weekly; double down on the two channels that bring signups, not just installs.
+
+---
+
+## 11. Submission log
+
+| Date | Where | Status |
+|---|---|---|
+| 2026-11-01 | GitHub repo | Description, homepage and 13 topics updated |
+| 2026-11-01 | Official MCP Registry | Live as `online.promptsaver/prompt-saver` (`server.json`, domain auth key in `~/.config/prompt-saver/`) |
+| 2026-11-01 | mcpservers.org (wong2/awesome-mcp-servers) | Submitted, free; review within 2 weeks |
+| 2026-11-01 | MCP Market | Submitted GitHub repo to the free queue (~4–6 weeks). Remote MCP listing is $69, skipped |
+| 2026-11-01 | FutureTools | Form filled; needs the captcha + Submit by hand |
+| 2026-11-01 | Launching Next | Form filled; needs the "2+3" check + Submit by hand |
+| 2026-11-01 | Insidr.ai | Form sent, no confirmation shown — unverified |
+| — | TopAI.tools, Easy With AI, AItoolnet | Paid only — skipped |
+| — | Futurepedia | No public submit page (404) |
+| — | PulseMCP | Submissions paused; picks up the Official MCP Registry automatically |
+| — | SaaSHub, Fazier, Peerlist, Uneed, DevHunt, AlternativeTo, BetaList, mcp.so, Glama, Smithery | Need an account you create first |
+| — | hesreallyhim/awesome-claude-code | Recommendations by users via issue form only; self-promotion discouraged — skipped |
