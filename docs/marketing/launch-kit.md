@@ -99,6 +99,58 @@ Rules first: most subs ban pure self-promotion. Read each sub's rules, use the "
 >
 > What prompts do you find yourself retyping the most? Happy to take feature requests.
 
+Link the title or first line to https://promptsaver.online/ rather than straight to the store, so the visit shows up in Vercel Analytics with reddit.com as the referrer. Put the store link in the body.
+
+**Draft (r/mcp):**
+
+> **Title:** I put my prompt library behind a remote MCP server — five tools, Bearer tokens, starred prompts become slash commands
+>
+> I kept losing the prompts that worked, so I built a small prompt manager and gave it an MCP endpoint. It's a remote server over streamable HTTP, no local process to run:
+>
+> ```
+> claude mcp add --transport http prompt-saver --scope user \
+>   https://promptsaver.online/api/mcp \
+>   --header "Authorization: Bearer ps_..."
+> ```
+>
+> What it exposes:
+>
+> - `search_prompts`, `get_prompt`, `create_prompt`, `update_prompt`, `save_version`. Search returns summaries only, so a big library doesn't flood the context; you fetch a body by id.
+> - Any prompt you star is also registered as an MCP prompt, so it shows up as a slash command named from its title.
+> - Tokens are per user, shown once, stored as a SHA-256 hash, revocable, and rate-limited per token.
+>
+> Two things I learned building it: favourites are read when the session connects, so a newly starred prompt needs a reconnect; and with a scale-to-zero Postgres the first call after idle is slow, which looks like a hung tool call if you don't expect it.
+>
+> Free, MIT, self-hostable: https://github.com/VeshRaazThapa/prompt-saver — hosted at https://promptsaver.online/
+>
+> Curious how others handle auth for remote servers. Is anyone doing OAuth instead of static Bearer tokens yet?
+
+**Draft (r/ClaudeCode):**
+
+> **Title:** My saved prompts are now slash commands in Claude Code (small open-source MCP server)
+>
+> I had a folder of markdown prompts I kept copy-pasting into Claude Code. I moved them into a prompt library with an MCP server, and now:
+>
+> - Star a prompt called "Daily Planning" and it becomes `/mcp__prompt-saver__daily-planning`. Anything you type after it is appended as context.
+> - Claude can search the library and pull a prompt by itself ("use my code review prompt on this diff").
+> - When a prompt gets better mid-session, Claude can save it back as a new version, so the good one isn't lost in scrollback.
+>
+> Setup is one command with a token from the settings page:
+>
+> ```
+> claude mcp add --transport http prompt-saver --scope user \
+>   https://promptsaver.online/api/mcp \
+>   --header "Authorization: Bearer ps_..."
+> ```
+>
+> The same library is in a Chrome extension: type `//` in claude.ai, ChatGPT or Gemini to insert a prompt.
+>
+> Free and MIT: https://promptsaver.online/ — source at https://github.com/VeshRaazThapa/prompt-saver
+>
+> Which prompts do you reuse most in Claude Code? I'm deciding what to ship as starter prompts.
+
+**Posting order:** r/ClaudeAI (template above) → r/mcp → r/ClaudeCode, one per day. Before each: read the sub's rules, pick the showcase flair if there is one, attach `extension/store/assets/demo-picker.gif` where images are allowed.
+
 ---
 
 ## 4. MCP directories (developer audience, low competition)
@@ -209,7 +261,8 @@ Tag: @AnthropicAI, @OpenAI, @GoogleDeepMind only where genuinely relevant; reply
 |---|---|
 | Installs, weekly users, impressions | Chrome Web Store dashboard → Analytics |
 | Signups | `select date(created_at), count(*) from users group by 1 order by 1 desc` |
-| Visits by channel | Vercel Analytics, filtered by `ref` |
+| Visits by channel | Vercel Analytics → Referrers (recording since 2026-11-12) |
+| Search clicks and impressions | Google Search Console, property `https://promptsaver.online/` (thapahimal777) |
 
 Review weekly; double down on the two channels that bring signups, not just installs.
 
@@ -226,6 +279,8 @@ Review weekly; double down on the two channels that bring signups, not just inst
 | 2026-11-01 | FutureTools | Form filled; needs the captcha + Submit by hand |
 | 2026-11-01 | Launching Next | Form filled; needs the "2+3" check + Submit by hand |
 | 2026-11-01 | Insidr.ai | Form sent, no confirmation shown — unverified |
+| 2026-11-12 | Vercel Web Analytics | Script added to the site; before this date no page views were recorded |
+| 2026-11-12 | Google Search Console | URL-prefix property verified by HTML file (`public/googlea2cd875d558b79a9.html` — keep it); `sitemap.xml` submitted, 2 pages discovered |
 | — | TopAI.tools, Easy With AI, AItoolnet | Paid only — skipped |
 | — | Futurepedia | No public submit page (404) |
 | — | PulseMCP | Submissions paused; picks up the Official MCP Registry automatically |
