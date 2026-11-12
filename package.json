@@ -23,6 +23,7 @@
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
     "@tailwindcss/typography": "^0.5.19",
+    "@vercel/analytics": "^2.0.1",
     "diff": "^8.0.3",
     "drizzle-orm": "^0.45.2",
     "mcp-handler": "^2.1.0",

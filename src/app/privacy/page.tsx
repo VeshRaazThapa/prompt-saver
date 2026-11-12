@@ -17,13 +17,20 @@ export default function PrivacyPage(): React.ReactElement {
         <span className="font-display text-2xl text-stone-900">Prompt Saver</span>
       </Link>
       <h1 className="mt-10 font-display text-4xl text-stone-900">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-stone-500">Last updated: 9 October 2026</p>
+      <p className="mt-2 text-sm text-stone-500">Last updated: 12 November 2026</p>
 
       <h2 className="mt-8 text-xl font-semibold">What we store</h2>
       <p className="mt-2">
         Your Google account name, email address and profile picture, and the prompts you save
         (title, text, tags, version history). Data is stored in Neon Postgres and served from
         Vercel.
+      </p>
+
+      <h2 className="mt-8 text-xl font-semibold">Website analytics</h2>
+      <p className="mt-2">
+        The website counts page views with Vercel Web Analytics: which page was opened, the
+        referring site, and the country, browser and device type. It sets no cookies and does not
+        identify you or follow you across sites. The Chrome extension sends no analytics.
       </p>
 
       <h2 className="mt-8 text-xl font-semibold">The Chrome extension</h2>
